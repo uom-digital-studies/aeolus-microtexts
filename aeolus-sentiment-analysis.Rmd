@@ -1,0 +1,191 @@
+---
+title: "Aeolus-sentiment"
+output: html_document
+date: "2025-10-16"
+---
+
+
+
+
+# Let's import Aeolus
+
+```{r}
+library(tidytext)
+library(tidyverse)
+
+aeolus <- tibble(
+  line = readLines("text/2_Odyssey/7_Aeolus/7_Aeolus.txt")
+)
+
+group_sections <- function(section_divider_col) {
+  # Initialise empty column for group IDs.
+  # When you read "Advanced R" sometime, you'll learn this
+  # is good practice when using an R for-loop
+  groups <- rep(0, length(section_divider_col))
+
+  # We are going to "loop" over the columns of TRUEs and FALSEs.
+  # Each time we encounter a T, we will add 1 to the group ID.
+  current_group_id <- 0
+
+  # Here is a for-loop. You will learn about them in Chapter 21
+  # of 'R for Data Science'. You rarely need to write these in
+  # text analyses. In fact, it's been so long since I had to write
+  # one, I had to look it up again...
+  for (idx in seq_along(section_divider_col)) {
+    boolean_value <- section_divider_col[[idx]]
+    if (isTRUE(boolean_value)) {
+      current_group_id <- current_group_id + 1
+    }
+    groups[idx] <- current_group_id
+  }
+  return(groups)
+}
+
+
+```
+
+# Find line numbers of each headline
+
+```{r}
+aeolus <- aeolus %>% 
+  mutate(is_capitals = str_detect(line, "^[^a-z]+$")) %>% 
+  mutate(previous_is_true = lag(is_capitals, n = 1, default = FALSE)) %>% 
+  mutate(split_on = is_capitals & !previous_is_true) %>% 
+  mutate(section = group_sections(split_on))
+```
+
+```{r}
+
+tidy_aeolus <- unnest_tokens(aeolus, word, line)
+
+# afinn scores the words from -5 to 5
+get_sentiments("afinn")
+
+# bing designates a word as positive or negative
+get_sentiments("bing")
+
+# nrc adds degrees of affect  
+get_sentiments("nrc")
+
+# syuzhet scores the words as a decimal between -1 and 1
+get_sentiment_dictionary()
+
+```
+```{r}
+
+install.packages("syuzhet")
+library(syuzhet)
+
+```
+
+```{r}
+syuzhet_aeolus <- tidy_aeolus %>%
+  left_join(get_sentiment_dictionary(), by = "word")
+```
+
+
+# for visualising sentiment scores and cumulative sentiment 
+group_by
+geom_col / geom_histogram
+
+see chapter 1, 2, 3 of r for data science 
+
+```{r}
+bing_aeolus <- tidy_aeolus %>%
+  left_join(get_sentiments("bing"), by = "word")
+```
+
+```{r}
+nrc_aeolus <- tidy_aeolus %>%
+  left_join(get_sentiments("nrc"), by = "word")
+```
+```{r}
+relationship = many-to-many
+```
+```{r}
+afinn_aeolus <- tidy_aeolus %>%
+  left_join(get_sentiments("afinn"), by = "word")
+```
+
+```{r}
+tidy_aeolus
+```
+
+# View() allows you to view the tibble 
+
+```{r}
+View(tidy_aeolus)
+```
+
+```{r}
+ggplot(data = syuzhet_aeolus,
+       mapping = aes(x = as.factor(section), weight = value)) +
+  geom_bar() + 
+  labs(x = "Microtext", y = "Total Sentiment Score")
+```
+```{r}
+ggsave("aeolus-sentiment-plots/syuzhet_aeolus_plot.png", width = 14, height = 10)
+```
+
+
+```{r}
+ggplot(data = syuzhet_aeolus,
+       mapping = aes(x = as.factor(section), weight = abs(value))) +
+  geom_bar() + 
+  labs(x = "Microtext", y = "Total Sentiment Score")
+```
+
+```{r}
+ggsave("aeolus-sentiment-plots/syuzhet_aeolus_abs_plot.png", width = 14, height = 10)
+```
+
+
+
+```{r}
+bing_aeolus %>%
+  mutate(value = if_else(sentiment == "positive", 1, -1, NA)) %>%
+  ggplot(mapping = aes(x = as.factor(section), weight = value)) +
+  geom_bar() + 
+  labs(x = "Microtext", y = "Total Sentiment Score")
+```
+```{r}
+ggsave("aeolus-sentiment-plots/bing_aeolus_plot.png", width = 14, height = 10)
+```
+
+
+```{r}
+bing_aeolus %>%
+  mutate(value = if_else(sentiment == "positive", 1, -1, NA)) %>%
+  ggplot(mapping = aes(x = as.factor(section), weight = abs(value))) +
+  geom_bar() + 
+  labs(x = "Microtext", y = "Total Sentiment Score")
+```
+```{r}
+ggsave("aeolus-sentiment-plots/bing_aeolus_abs_plot.png", width = 14, height = 10)
+```
+
+```{r}
+afinn_aeolus %>%
+  ggplot(mapping = aes(x = as.factor(section), weight = value)) +
+  geom_bar() + 
+  labs(x = "Microtext", y = "Total Sentiment Score")
+```
+```{r}
+ggsave("aeolus-sentiment-plots/afinn_aeolus_plot.png", width = 14, height = 10)
+```
+
+
+```{r}
+afinn_aeolus %>%
+  ggplot(mapping = aes(x = as.factor(section), weight = abs(value))) +
+  geom_bar() + 
+  labs(x = "Microtext", y = "Total Sentiment Score")
+```
+```{r}
+ggsave("aeolus-sentiment-plots/afinn_aeolus_abs_plot.png", width = 14, height = 10)
+```
+
+
+
+
+
