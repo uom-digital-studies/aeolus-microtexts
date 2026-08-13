@@ -1,4 +1,19 @@
 .Rproj.user
 .Rhistory
+.Rapp.history
 .RData
 .Ruserdata
+.httr-oauth
+.posit/assistant
+
+# R package build/check artifacts
+*.Rcheck/
+*.tar.gz
+/vignettes/*.html
+/vignettes/*.pdf
+/inst/doc
+/doc/
+/Meta/
+
+# OS cruft
+.DS_Store
