@@ -1,0 +1,4 @@
+models:
+  - llama3.2:1b
+  - llama3.1
+  - mistral
