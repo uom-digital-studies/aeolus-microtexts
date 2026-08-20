@@ -10,9 +10,10 @@
 
 set -euo pipefail
 
-# Config file (path to a .yml listing `models:`) is passed in via
-# `sbatch --export=CONFIG=...` from submit-sentiment-jobs.sh
+# Config file (path to a .yml listing `models:`) and this sweep's shared
+# run-ID are passed in via `sbatch --export=...` from submit-sentiment-jobs.sh
 CONFIG="${CONFIG:?CONFIG environment variable must point to a models .yml file}"
+RUN_ID="${RUN_ID:?RUN_ID environment variable must be set (shared per sweep)}"
 
 module load R    # adjust to your cluster's module system
 module load ollama
@@ -38,9 +39,14 @@ MODEL=$(Rscript -e '
   cat(models[[idx]])
 ' "$CONFIG" "$SLURM_ARRAY_TASK_ID")
 
-echo "Task $SLURM_ARRAY_TASK_ID running model: $MODEL"
+echo "Task $SLURM_ARRAY_TASK_ID running model: $MODEL (run ID: $RUN_ID)"
 
 # Make sure the model is pulled locally before running the analysis
 ollama pull "$MODEL"
 
-Rscript ollama-sentiment-analysis.R --model "$MODEL"
+# Slugify the model name the same way run_sentiment_pipeline()'s R side
+# does, so filenames match what the CLI script would generate by default
+MODEL_SLUG=$(echo "$MODEL" | sed -E 's/[^A-Za-z0-9._-]+/-/g')
+OUTPUT="results/${RUN_ID}_${MODEL_SLUG}-sentiment.csv"
+
+Rscript ollama-sentiment-analysis.R --model "$MODEL" --output "$OUTPUT"

@@ -15,5 +15,9 @@ if [[ "$N_MODELS" -lt 1 ]]; then
   exit 1
 fi
 
-echo "Submitting $N_MODELS job(s) for models listed in $CONFIG"
-sbatch --array="0-$((N_MODELS - 1))" --export="CONFIG=$CONFIG" run-sentiment-analysis.slurm
+# Single run-ID shared by every task in this sweep, so all models' output
+# files can be grouped/identified together.
+RUN_ID=$(date +%Y%m%d-%H%M%S)
+
+echo "Submitting $N_MODELS job(s) for models listed in $CONFIG (run ID: $RUN_ID)"
+sbatch --array="0-$((N_MODELS - 1))" --export="CONFIG=$CONFIG,RUN_ID=$RUN_ID" run-sentiment-analysis.slurm
