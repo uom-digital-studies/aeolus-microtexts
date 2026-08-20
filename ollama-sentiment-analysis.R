@@ -28,7 +28,7 @@ analyse_sentiment_ollama <- function(sentence_tbl,
                                       model = "llama3.1",
                                       system_prompt = paste(
                                         "You are a sentiment analysis assistant.",
-                                        "Classify the sentiment of the sentence you are given."
+                                        "Classify the sentiment of this social media post you are given."
                                       )) {
   chat <- ellmer::chat_ollama(system_prompt = system_prompt, model = model)
 
