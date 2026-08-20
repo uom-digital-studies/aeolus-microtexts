@@ -8,8 +8,8 @@ analyse_sentiment_ollama(
   sentence_tbl,
   sentence,
   model = "llama3.1",
-  system_prompt = paste("You are a sentiment analysis assistant.",
-    "Classify the sentiment of this social media post you are given.")
+  context_variant = "no_context",
+  chat_backend = ellmer::chat_ollama
 )
 }
 \arguments{
@@ -19,11 +19,13 @@ analyse_sentiment_ollama(
 
 \item{model}{Name of the Ollama model to use}
 
-\item{system_prompt}{Instructions given to the model before each sentence}
+\item{context_variant}{See \code{\link[=context_variant_text]{context_variant_text()}}}
+
+\item{chat_backend}{Chat client constructor; see \code{\link[=analyse_with_schema]{analyse_with_schema()}}}
 }
 \value{
 \code{sentence_tbl} with two new columns: \code{sentiment_label} and \code{sentiment_score}
 }
 \description{
-Analyse the sentiment of each sentence in a tibble using an Ollama model
+Thin wrapper around \code{\link[=analyse_with_schema]{analyse_with_schema()}} using \link{sentiment_schema}.
 }

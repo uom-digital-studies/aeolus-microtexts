@@ -22,6 +22,15 @@ Suggests:
     knitr,
     rmarkdown,
     syuzhet,
-    textdata
+    testthat (>= 3.0.0),
+    textdata,
+    withr
 VignetteBuilder: knitr
 Config/roxygen2/version: 8.1.0
+Config/testthat/edition: 3
+Collate:
+    'data.R'
+    'ollama-engine.R'
+    'nationalism.R'
+    'sentiment-llm.R'
+    'ugc.R'

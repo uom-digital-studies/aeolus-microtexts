@@ -1,8 +1,6 @@
 # Use Ollama to grade nationalist sentiment in each Aeolus microtext
 #
 # CLI wrapper around aeolusmicrotexts::run_nationalism_pipeline().
-# RQ2 scaffolding: run_nationalism_pipeline() is not yet implemented (see
-# R/nationalism.R), so running this script currently just errors out.
 # `commandArgs(trailingOnly = TRUE)` is empty in an interactive session, so
 # defaults below apply automatically when sourcing this file at the console.
 

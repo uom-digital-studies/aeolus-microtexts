@@ -8,8 +8,8 @@ analyse_nationalism_ollama(
   sentence_tbl,
   sentence,
   model = "llama3.1",
-  system_prompt = paste("You are a political discourse analysis assistant.",
-    "Classify the nationalist orientation of this text you are given.")
+  context_variant = "no_context",
+  chat_backend = ellmer::chat_ollama
 )
 }
 \arguments{
@@ -19,11 +19,13 @@ analyse_nationalism_ollama(
 
 \item{model}{Name of the Ollama model to use}
 
-\item{system_prompt}{Instructions given to the model before each sentence}
+\item{context_variant}{See \code{\link[=context_variant_text]{context_variant_text()}}}
+
+\item{chat_backend}{Chat client constructor; see \code{\link[=analyse_with_schema]{analyse_with_schema()}}}
 }
 \value{
 \code{sentence_tbl} with two new columns: \code{nationalism_label} and \code{nationalism_score}
 }
 \description{
-Analyse the nationalist orientation of each sentence using an Ollama model
+Thin wrapper around \code{\link[=analyse_with_schema]{analyse_with_schema()}} using \link{nationalism_schema}.
 }

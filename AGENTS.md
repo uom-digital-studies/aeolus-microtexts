@@ -17,4 +17,4 @@
 
 - Be as concise as possible while still making sense. Sacrifice grammar for concision.
 - Remind me when appropriate to refresh `renv`
-- Outstanding work is tracked in `TODO.md` (moving to GitHub Issues after the GitLab→GitHub migration), not in `AGENTS.md`/`CONTEXT.md`
+- Outstanding work is tracked in `TODO.md`, not in `AGENTS.md`/`CONTEXT.md`

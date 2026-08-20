@@ -4,7 +4,13 @@
 \alias{run_nationalism_pipeline}
 \title{Run the full Ollama nationalism pipeline: load, tokenise, score, write}
 \usage{
-run_nationalism_pipeline(input, model, output)
+run_nationalism_pipeline(
+  input,
+  model,
+  output,
+  context_variant = "no_context",
+  chat_backend = ellmer::chat_ollama
+)
 }
 \arguments{
 \item{input}{Path to the Aeolus source text; see \code{\link[=load_aeolus]{load_aeolus()}}}
@@ -12,10 +18,14 @@ run_nationalism_pipeline(input, model, output)
 \item{model}{Name of the Ollama model to use}
 
 \item{output}{Path to write the scored sentences CSV to}
+
+\item{context_variant}{See \code{\link[=context_variant_text]{context_variant_text()}}}
+
+\item{chat_backend}{Chat client constructor; see \code{\link[=analyse_with_schema]{analyse_with_schema()}}}
 }
 \value{
 The scored sentence tibble, invisibly
 }
 \description{
-Run the full Ollama nationalism pipeline: load, tokenise, score, write
+Thin wrapper around \code{\link[=run_pipeline_with_schema]{run_pipeline_with_schema()}} using \link{nationalism_schema}.
 }
