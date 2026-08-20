@@ -2,11 +2,13 @@
 
 #' Read in Aeolus and split into microtexts.
 #'
-#' @param path Aeolus as a .txt file
+#' @param path Aeolus as a .txt file. Defaults to the copy shipped with the
+#'   package in `inst/extdata/`.
 #'
 #' @returns A tibble, with each line of Aeolus keyed to a microtext
+#' @export
 #'
-load_aeolus <- function(path = "7_Aeolus.txt") {
+load_aeolus <- function(path = system.file("extdata", "7_Aeolus.txt", package = "aeolusmicrotexts")) {
   aeolus <- tibble::tibble(
     line = readLines(path)
   ) |>
@@ -65,8 +67,8 @@ tokenise_microtexts_by_sentence <- function(line_tbl, line, section) {
   # Tokenise by sentence
   sent_tbl <- tidytext::unnest_tokens(
     text_tbl, sentence, text,
-    token="sentences", # We want LLM to see a complete sentence to analyse
-    to_lower=FALSE     # We want LLM to see capital letters, as in training data
-    )
+    token = "sentences", # We want LLM to see a complete sentence to analyse
+    to_lower = FALSE     # We want LLM to see capital letters, as in training data
+  )
   return(sent_tbl)
 }

@@ -16,3 +16,4 @@
 ^renv\.lock$
 ^\.Rprofile$
 ^README\.Rmd$
+^\.posit/assistant$
