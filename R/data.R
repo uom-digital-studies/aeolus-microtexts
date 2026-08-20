@@ -57,8 +57,6 @@ index_microtexts <- function(section_divider_col) {
 #'
 #' @returns A new tibble, with one row per sentence
 #' @export
-#'
-#' @examples
 tokenise_microtexts_by_sentence <- function(line_tbl, line, section) {
   # Concatenate the lines in each microtext
   text_tbl <- line_tbl |>

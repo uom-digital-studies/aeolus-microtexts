@@ -23,11 +23,11 @@ files outside the package, eventually deposit-able as an RO-Crate.
 - [x] Update `submit-sentiment-jobs.sh` to generate/export a shared run-ID/timestamp per sweep; update `run-sentiment-analysis.slurm` and the CLI script to use it in the output path
 - [x] Scaffold `R/nationalism.R`, `R/ugc.R` and give the existing empty `ollama-nationalism-analysis.R`/`ollama-ucg-analysis.R` the thin-wrapper shape (no real logic yet)
 - [x] Build `vignettes/rq1-sentiment.Rmd` from `aeolus-sentiment-analysis.Rmd` (keep all four lexicons, compute joins live, read Ollama results from `inst/extdata/results/`); add `vignettes/rq2-nationalism.Rmd` and `vignettes/rq3-ugc.Rmd` skeletons; retire the old Rmd
+- [x] Run `devtools::document()` to generate `NAMESPACE`/`man/`; sanity-check with `devtools::load_all()`
 - [ ] Add `sync-results.sh` (SSH-alias-based rsync wrapper to pull `results/` down from the HPC cluster)
 - [ ] Add `.Rprofile` check warning when the running R version differs from the one recorded in `renv.lock`
 - [ ] Update `.gitignore` to also ignore top-level `results/` (only promoted copies under `inst/extdata/results/` are tracked)
 - [ ] Rewrite `README.md` to cover package usage (installation, basic example) alongside the HPC/SLURM workflow
-- [ ] Run `devtools::document()` to generate `NAMESPACE`/`man/`; sanity-check with `devtools::load_all()`
 - [ ] Manually promote one or more curated result CSVs into `inst/extdata/results/` once a sweep has been reviewed
 
 Deferred / out of scope for now: RO-Crate metadata generation, `CITATION.cff` (once the article has a DOI), automated tests/CI/pkgdown, RQ2/RQ3 actual analysis logic, and exact edition/provenance details for `7_Aeolus.txt`.

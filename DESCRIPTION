@@ -16,7 +16,6 @@ Description: Reproducible analysis code and data for a study of the
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
 Depends:
     R (>= 4.1.0)
 Suggests:
@@ -25,3 +24,4 @@ Suggests:
     syuzhet,
     textdata
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.1.0
