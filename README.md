@@ -16,7 +16,7 @@ Goal: turn this repo into an installable R package (`aeolusmicrotexts`) holding
 reusable logic/data/vignettes, with SLURM/HPC infrastructure kept as sibling
 files outside the package, eventually deposit-able as an RO-Crate.
 
-- [ ] Scaffold package skeleton: `DESCRIPTION`, `NAMESPACE`, `LICENSE`, `LICENSE.md`, `NEWS.md`, `.Rbuildignore`
+- [x] Scaffold package skeleton: `DESCRIPTION`, `NAMESPACE`, `LICENSE`, `LICENSE.md`, `NEWS.md`, `.Rbuildignore`
 - [ ] Move `load-aeolus.R` content into `R/data.R`; update `load_aeolus()` to default to `system.file("extdata", "7_Aeolus.txt", package = "aeolusmicrotexts")`
 - [ ] Move `7_Aeolus.txt` into `inst/extdata/`; add TODO note on its edition/extraction provenance
 - [ ] Refactor `ollama-sentiment-analysis.R`: move `analyse_sentiment_ollama()` and new `run_sentiment_pipeline()` into `R/sentiment-llm.R`; reduce the top-level script to CLI parsing + one call
