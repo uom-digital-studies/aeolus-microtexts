@@ -17,15 +17,15 @@ The sentence(s) telling the model what to classify for a given research question
 _Avoid_: system prompt (system prompt = context variant + task instruction, not the task instruction alone)
 
 **Unit of analysis**:
-The span of text a single LLM call classifies. Defined by two orthogonal factors: **granularity** (`microtext` vs `sentence`) and **include_headline** (whether the ALL-CAPS headline preceding a microtext is included in the unit).
+The span of text a single LLM call classifies. Defined by two orthogonal factors: **granularity** (`microtext` vs `sentence`) and **include_headline** (whether the ALL-CAPS headline is included — prepended to the unit at `microtext` granularity, or retained as its own unit rather than filtered out at `sentence` granularity). Its concrete text is recorded in a results CSV's `unit_of_analysis` column; see `docs/adr/0003-results-csv-schema.md` for the full row schema.
 _Avoid_: chunk, segment
 
 **Microtext**:
-A block of text in `7_Aeolus.txt` delimited by an ALL-CAPS headline, treated as the analogue of a single social-media post.
-_Avoid_: post, entry (post is fine informally, but microtext is the canonical term)
+A block of text in `7_Aeolus.txt` delimited by an ALL-CAPS headline, treated as the analogue of a single social-media post. Identified in results CSVs by the `microtext` column (an integer id); the R-internal grouping variable is still called `section`.
+_Avoid_: post, entry, section (post is fine informally, but microtext is the canonical term)
 
 **Grid cell**:
-One combination of research question × model × context variant × unit of analysis — the atomic unit of work in the pipeline sweep, corresponding to one (or more, for sentence granularity) LLM classification calls.
+One combination of research question × model × context variant × unit of analysis — the atomic unit of work in the pipeline sweep, corresponding to one (or more, for sentence granularity) LLM classification calls. Every row in a results CSV carries an explicit column for each of these factors, so rows/files are self-describing and freely concatenable regardless of how the sweep happened to be split across files; see `docs/adr/0003-results-csv-schema.md`.
 _Avoid_: combination, run, condition
 
 **Test mode**:

@@ -1,6 +1,7 @@
 # TODO
 
 [ ] Refactor `ugc.R`, `sentiment-llm.R` and `nationalism.R` to clearly distinguish the schema for each research question from the logic of applying it to the data; use test-driven development, setting up tests that mock the LLM output locally
+[ ] Implement `granularity`/`include_headline` branching in `load_aeolus()`/`tokenise_microtexts_by_sentence()` (currently always sentence-tokenises with headlines retained); update `run_pipeline_with_schema()` to emit the results-CSV schema in `docs/adr/0003-results-csv-schema.md` (self-describing columns incl. `research_question`, raw `model`, `context_variant`, `granularity`, `include_headline`, `microtext`, `unit_index`, `unit_of_analysis`, `label`, `score`)
 [ ] Build `_targets.R` + `slurm-resources.yml` (root-level, per ADR 0001); retire `submit-sentiment-jobs.sh`/`run-sentiment-analysis.slurm`/`ollama-*.R` once validated; use test-driven development, setting up local dockert for testing slurm job allocation locally
 [ ] Add `sync-results.sh` (SSH-alias-based rsync wrapper to pull `results/` down from the HPC cluster)
 [ ] Add `.Rprofile` check warning when the running R version differs from the one recorded in `renv.lock`
