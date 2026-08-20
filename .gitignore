@@ -5,6 +5,8 @@
 .Ruserdata
 .httr-oauth
 .posit/assistant
+.agents
+skills-lock.json
 
 # R package build/check artifacts
 *.Rcheck/

@@ -1,0 +1,37 @@
+# Aeolus Microtexts
+
+Analyses the microtexts of the *Aeolus* episode of *Ulysses* as if they were social media content, using LLM-based qualitative coding across three research questions.
+
+## Language
+
+**Research question (RQ)**:
+One of three fixed lines of inquiry (RQ1 sentiment, RQ2 nationalism, RQ3 UGC-resemblance). Each RQ has a fixed coding schema (an `ellmer::type_object()`) that does not vary across the pipeline sweep.
+_Avoid_: rq, question, analysis type
+
+**Context variant**:
+One of three framings prepended to the system prompt, giving the LLM different background about the text before it: `no_context`, `ulysses_context` ("this text is from *Ulysses*"), `media_text_context` ("this text is/is intended to be media text"). Crossed independently within each research question.
+_Avoid_: prompt variant, framing, condition
+
+**Task instruction**:
+The sentence(s) telling the model what to classify for a given research question. Derived programmatically from that RQ's schema description (the single source of truth), not hand-duplicated — composed together with the context variant to form the full system prompt.
+_Avoid_: system prompt (system prompt = context variant + task instruction, not the task instruction alone)
+
+**Unit of analysis**:
+The span of text a single LLM call classifies. Defined by two orthogonal factors: **granularity** (`microtext` vs `sentence`) and **include_headline** (whether the ALL-CAPS headline preceding a microtext is included in the unit).
+_Avoid_: chunk, segment
+
+**Microtext**:
+A block of text in `7_Aeolus.txt` delimited by an ALL-CAPS headline, treated as the analogue of a single social-media post.
+_Avoid_: post, entry (post is fine informally, but microtext is the canonical term)
+
+**Grid cell**:
+One combination of research question × model × context variant × unit of analysis — the atomic unit of work in the pipeline sweep, corresponding to one (or more, for sentence granularity) LLM classification calls.
+_Avoid_: combination, run, condition
+
+**Test mode**:
+A single R parameter that switches the pipeline to a reduced sweep for local/Docker validation: 5 microtexts, using only the small `llama3.2:1b` model. Controlled entirely in R, not via `targets` branching.
+_Avoid_: dev mode, dry run
+
+**Chat backend**:
+An injectable argument (default `ellmer::chat_ollama`) threaded through the analysis functions, swappable for a mocked/fake implementation in fast logic tests. Exists because `ellmer` has no built-in mock/test chat provider.
+_Avoid_: LLM client, provider (backend is the pipeline-specific term)
