@@ -1,0 +1,28 @@
+---
+title: "RQ2: Sentiment and nationalism"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{RQ2: Sentiment and nationalism}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Skeleton for RQ2: *is there a correlation between sentiment polarity/intensity
+and nationalism in the episode?*
+
+This is a structural placeholder, mirroring `rq1-sentiment.Rmd`. The
+underlying analysis functions (`analyse_nationalism_ollama()`,
+`run_nationalism_pipeline()` in `R/nationalism.R`) aren't implemented yet, so
+there's no analysis to run here.
+
+TODO(RQ2): once `R/nationalism.R` has real logic and results have been
+promoted into `inst/extdata/results/`, build this out analogously to
+`rq1-sentiment.Rmd`'s Ollama section, and join against the RQ1 sentiment
+scores to test for a correlation.

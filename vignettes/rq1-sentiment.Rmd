@@ -1,0 +1,122 @@
+---
+title: "RQ1: Sentiment distributed across the text"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{RQ1: Sentiment distributed across the text}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 5
+)
+```
+
+This vignette is a working document for RQ1: *how is sentiment distributed
+across the text, according to human, lexicon-based and LLM sentiment
+analysers?* It compares four word-level lexicons (`afinn`, `bing`, `nrc`,
+`syuzhet`) against LLM-based sentiment scores produced by the
+`ollama-sentiment-analysis.R` CLI script (see the repo root README for the
+HPC/SLURM workflow that generates them).
+
+Human-coded sentiment annotations don't exist yet, so that comparison is
+deferred.
+
+## Load and tokenise Aeolus
+
+```{r}
+aeolus <- aeolusmicrotexts::load_aeolus()
+tidy_aeolus <- tidytext::unnest_tokens(aeolus, word, line)
+```
+
+## Lexicon-based sentiment
+
+The four lexicons below are joined **live** at render time via
+`tidytext`/`syuzhet` (which in turn pull `afinn`/`nrc` through `textdata`,
+prompting for a one-time download/license acceptance on first use) rather
+than shipped as static word-sentiment data in this package. This avoids
+redistributing the NRC lexicon's word-sentiment mappings, which carry a
+non-commercial-use restriction, under this repo's MIT license.
+
+```{r}
+afinn_aeolus <- tidy_aeolus |>
+  dplyr::left_join(tidytext::get_sentiments("afinn"), by = "word")
+
+bing_aeolus <- tidy_aeolus |>
+  dplyr::left_join(tidytext::get_sentiments("bing"), by = "word") |>
+  dplyr::mutate(value = dplyr::case_match(
+    sentiment,
+    "positive" ~ 1,
+    "negative" ~ -1
+  ))
+
+nrc_aeolus <- tidy_aeolus |>
+  dplyr::left_join(tidytext::get_sentiments("nrc"), by = "word", relationship = "many-to-many")
+
+syuzhet_aeolus <- tidy_aeolus |>
+  dplyr::left_join(syuzhet::get_sentiment_dictionary(), by = "word")
+```
+
+### Total sentiment per microtext
+
+A small helper keeps the four near-identical plots below consistent: total
+(signed) and total unsigned (absolute) sentiment score, summed by microtext.
+
+```{r}
+plot_sentiment_by_microtext <- function(scored_tbl, value_col, subtitle) {
+  ggplot2::ggplot(scored_tbl, ggplot2::aes(x = as.factor(section), weight = {{ value_col }})) +
+    ggplot2::geom_bar() +
+    ggplot2::labs(x = "Microtext", y = "Total sentiment score", subtitle = subtitle)
+}
+```
+
+```{r}
+plot_sentiment_by_microtext(afinn_aeolus, value, "afinn (signed)")
+plot_sentiment_by_microtext(afinn_aeolus, abs(value), "afinn (absolute)")
+```
+
+```{r}
+plot_sentiment_by_microtext(bing_aeolus, value, "bing (signed)")
+plot_sentiment_by_microtext(bing_aeolus, abs(value), "bing (absolute)")
+```
+
+```{r}
+plot_sentiment_by_microtext(nrc_aeolus, value, "nrc (signed)")
+plot_sentiment_by_microtext(nrc_aeolus, abs(value), "nrc (absolute)")
+```
+
+```{r}
+plot_sentiment_by_microtext(syuzhet_aeolus, value, "syuzhet (signed)")
+plot_sentiment_by_microtext(syuzhet_aeolus, abs(value), "syuzhet (absolute)")
+```
+
+## LLM-based sentiment (Ollama)
+
+Scored sentence-level CSVs produced by `ollama-sentiment-analysis.R` are
+manually reviewed and promoted into `inst/extdata/results/` before this
+vignette reads them (see the repo root README's data/results section) —
+nothing is read from the top-level, gitignored `results/` scratch directory.
+
+```{r}
+results_dir <- system.file("extdata", "results", package = "aeolusmicrotexts")
+result_files <- if (nzchar(results_dir)) list.files(results_dir, pattern = "\\.csv$", full.names = TRUE) else character()
+
+if (length(result_files) == 0) {
+  message("No promoted Ollama sentiment results found in inst/extdata/results/ yet.")
+} else {
+  ollama_sentiment <- purrr::map(result_files, readr::read_csv, show_col_types = FALSE) |>
+    purrr::set_names(basename(result_files)) |>
+    dplyr::bind_rows(.id = "source_file")
+
+  ollama_sentiment |>
+    dplyr::group_by(source_file, section) |>
+    dplyr::summarise(total_score = sum(sentiment_score), .groups = "drop") |>
+    ggplot2::ggplot(ggplot2::aes(x = as.factor(section), y = total_score, fill = source_file)) +
+    ggplot2::geom_col(position = "dodge") +
+    ggplot2::labs(x = "Microtext", y = "Total sentiment score", fill = "Model run")
+}
+```

@@ -1,0 +1,27 @@
+---
+title: "RQ3: Resemblance to user-generated content"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{RQ3: Resemblance to user-generated content}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Skeleton for RQ3: *how much do the microtexts resemble contemporary social
+media content? (Can an LLM be fooled into thinking the microtexts are UGC?)*
+
+This is a structural placeholder, mirroring `rq1-sentiment.Rmd`. The
+underlying analysis functions (`analyse_ugc_ollama()`, `run_ugc_pipeline()`
+in `R/ugc.R`) aren't implemented yet — including the `social_media_text_type`
+structured type, whose `label`/`score` fields are still `"???"` placeholders.
+
+TODO(RQ3): once `R/ugc.R` has real logic and results have been promoted into
+`inst/extdata/results/`, build this out analogously to `rq1-sentiment.Rmd`'s
+Ollama section.
