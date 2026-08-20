@@ -21,7 +21,7 @@ files outside the package, eventually deposit-able as an RO-Crate.
 - [x] Move `7_Aeolus.txt` into `inst/extdata/`; add TODO note on its edition/extraction provenance
 - [x] Refactor `ollama-sentiment-analysis.R`: move `analyse_sentiment_ollama()` and new `run_sentiment_pipeline()` into `R/sentiment-llm.R`; reduce the top-level script to CLI parsing + one call
 - [x] Update `submit-sentiment-jobs.sh` to generate/export a shared run-ID/timestamp per sweep; update `run-sentiment-analysis.slurm` and the CLI script to use it in the output path
-- [ ] Scaffold `R/nationalism.R`, `R/ugc.R` and give the existing empty `ollama-nationalism-analysis.R`/`ollama-ucg-analysis.R` the thin-wrapper shape (no real logic yet)
+- [x] Scaffold `R/nationalism.R`, `R/ugc.R` and give the existing empty `ollama-nationalism-analysis.R`/`ollama-ucg-analysis.R` the thin-wrapper shape (no real logic yet)
 - [ ] Build `vignettes/rq1-sentiment.Rmd` from `aeolus-sentiment-analysis.Rmd` (keep all four lexicons, compute joins live, read Ollama results from `inst/extdata/results/`); add `vignettes/rq2-nationalism.Rmd` and `vignettes/rq3-ugc.Rmd` skeletons; retire the old Rmd
 - [ ] Add `sync-results.sh` (SSH-alias-based rsync wrapper to pull `results/` down from the HPC cluster)
 - [ ] Add `.Rprofile` check warning when the running R version differs from the one recorded in `renv.lock`
