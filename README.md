@@ -17,9 +17,9 @@ reusable logic/data/vignettes, with SLURM/HPC infrastructure kept as sibling
 files outside the package, eventually deposit-able as an RO-Crate.
 
 - [x] Scaffold package skeleton: `DESCRIPTION`, `NAMESPACE`, `LICENSE`, `LICENSE.md`, `NEWS.md`, `.Rbuildignore`
-- [ ] Move `load-aeolus.R` content into `R/data.R`; update `load_aeolus()` to default to `system.file("extdata", "7_Aeolus.txt", package = "aeolusmicrotexts")`
-- [ ] Move `7_Aeolus.txt` into `inst/extdata/`; add TODO note on its edition/extraction provenance
-- [ ] Refactor `ollama-sentiment-analysis.R`: move `analyse_sentiment_ollama()` and new `run_sentiment_pipeline()` into `R/sentiment-llm.R`; reduce the top-level script to CLI parsing + one call
+- [x] Move `load-aeolus.R` content into `R/data.R`; update `load_aeolus()` to default to `system.file("extdata", "7_Aeolus.txt", package = "aeolusmicrotexts")`
+- [x] Move `7_Aeolus.txt` into `inst/extdata/`; add TODO note on its edition/extraction provenance
+- [x] Refactor `ollama-sentiment-analysis.R`: move `analyse_sentiment_ollama()` and new `run_sentiment_pipeline()` into `R/sentiment-llm.R`; reduce the top-level script to CLI parsing + one call
 - [ ] Update `submit-sentiment-jobs.sh` to generate/export a shared run-ID/timestamp per sweep; update `run-sentiment-analysis.slurm` and the CLI script to use it in the output path
 - [ ] Scaffold `R/nationalism.R`, `R/ugc.R` and give the existing empty `ollama-nationalism-analysis.R`/`ollama-ucg-analysis.R` the thin-wrapper shape (no real logic yet)
 - [ ] Build `vignettes/rq1-sentiment.Rmd` from `aeolus-sentiment-analysis.Rmd` (keep all four lexicons, compute joins live, read Ollama results from `inst/extdata/results/`); add `vignettes/rq2-nationalism.Rmd` and `vignettes/rq3-ugc.Rmd` skeletons; retire the old Rmd
