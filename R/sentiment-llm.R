@@ -4,6 +4,7 @@
 
 #' Coding schema for sentiment analysis (RQ1)
 #'
+#' @include ollama-engine.R
 #' @export
 sentiment_schema <- new_rq_schema(
   name = "sentiment",

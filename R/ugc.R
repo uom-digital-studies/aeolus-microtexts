@@ -6,6 +6,7 @@
 #' TODO(RQ3): the `label` values and `score`/instruction text below are
 #' placeholders (`"???"`) pending the final RQ3 analysis design.
 #'
+#' @include ollama-engine.R
 #' @export
 ugc_schema <- new_rq_schema(
   name = "ugc",

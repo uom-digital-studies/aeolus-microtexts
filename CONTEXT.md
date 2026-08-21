@@ -25,8 +25,12 @@ A block of text in `7_Aeolus.txt` delimited by an ALL-CAPS headline, treated as 
 _Avoid_: post, entry, section (post is fine informally, but microtext is the canonical term)
 
 **Grid cell**:
-One combination of research question × model × context variant × unit of analysis — the atomic unit of work in the pipeline sweep, corresponding to one (or more, for sentence granularity) LLM classification calls. Every row in a results CSV carries an explicit column for each of these factors, so rows/files are self-describing and freely concatenable regardless of how the sweep happened to be split across files; see `docs/adr/0003-results-csv-schema.md`.
+One combination of research question × model × context variant × unit of analysis — the atomic unit of work in a run, corresponding to one (or more, for sentence granularity) LLM classification calls. Every row in a results CSV carries an explicit column for each of these factors, so rows/files are self-describing and freely concatenable regardless of how the run happened to be split across files; see `docs/adr/0003-results-csv-schema.md`.
 _Avoid_: combination, run, condition
+
+**Run**:
+One invocation of the pipeline across some or all of the grid, identified by a `run_id` combining a timestamp and the installed `aeolusmicrotexts` package version (e.g. `20260821-153000_v0.1.0.9000`), so output is traceable to the exact code that produced it. Lives only in the `results/<run_id>/...` directory/filename layer (`docs/adr/0003-results-csv-schema.md`), never as its own CSV column; see `docs/adr/0004-install-package-for-targets-workers.md` for why the version is embedded.
+_Avoid_: sweep (used informally elsewhere for the same concept, but "run" is the canonical term)
 
 **Test mode**:
 A single R parameter that switches the pipeline to a reduced sweep for local/Docker validation: 5 microtexts, using only the small `llama3.2:1b` model. Controlled entirely in R, not via `targets` branching.

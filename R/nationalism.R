@@ -4,6 +4,7 @@
 
 #' Coding schema for nationalist-orientation analysis (RQ2)
 #'
+#' @include ollama-engine.R
 #' @export
 nationalism_schema <- new_rq_schema(
   name = "nationalism",

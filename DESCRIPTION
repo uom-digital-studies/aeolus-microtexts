@@ -24,13 +24,28 @@ Suggests:
     syuzhet,
     testthat (>= 3.0.0),
     textdata,
-    withr
+    withr,
+    yaml
 VignetteBuilder: knitr
 Config/roxygen2/version: 8.1.0
 Config/testthat/edition: 3
 Collate:
+    'aeolusmicrotexts-package.R'
     'data.R'
     'ollama-engine.R'
     'nationalism.R'
+    'pipeline-grid.R'
     'sentiment-llm.R'
+    'slurm-resources.R'
     'ugc.R'
+Imports: 
+    dplyr,
+    ellmer,
+    purrr,
+    readr,
+    rlang,
+    S7,
+    stringr,
+    tibble,
+    tidyr,
+    tidytext
