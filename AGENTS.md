@@ -1,6 +1,7 @@
 # R style
 
 - Always qualify functions with their namespace (unless base R), e.g. `dplyr::filter`
+- Exception to qualifying functions: do not qualify `aeolusmicrotext` functions in `_targets.R`, because this will confuse the static analysis.
 - Prefer tidyverse functions, e.g. `purrr` for iteration, `tibble` for data frames
 - Use the native pipe
 - New RQ schema files (like `nationalism.R`, `sentiment-llm.R`, `ugc.R`) call `new_rq_schema()` at the top level, so they must load after `R/ollama-engine.R`. Tag them `#' @include ollama-engine.R` and run `devtools::document()` to regenerate `DESCRIPTION`'s `Collate` field — never hand-edit `Collate` (see ADR 0002). If a new file adds any other top-level, load-order-sensitive code, give it an `@include` tag for its dependency too.
