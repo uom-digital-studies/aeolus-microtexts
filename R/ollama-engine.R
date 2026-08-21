@@ -138,7 +138,7 @@ run_pipeline_with_schema <- function(input, model, output, schema,
   dir.create(dirname(output), recursive = TRUE, showWarnings = FALSE)
 
   aeolus <- load_aeolus(input)
-  aeolus_sentences <- tokenise_microtexts_by_sentence(aeolus, line, section)
+  aeolus_sentences <- tokenise_microtexts_by_sentence(aeolus, line, microtext)
   aeolus_scored_sents <- analyse_with_schema(aeolus_sentences, sentence, schema,
     model = model, context_variant = context_variant, chat_backend = chat_backend
   )

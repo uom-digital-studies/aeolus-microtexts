@@ -15,21 +15,21 @@ load_aeolus <- function(path = system.file("extdata", "7_Aeolus.txt", package = 
     dplyr::mutate(is_capitals = stringr::str_detect(line, "^[^a-z]+$")) |>
     dplyr::mutate(previous_is_true = dplyr::lag(is_capitals, n = 1, default = FALSE)) |>
     dplyr::mutate(split_on = is_capitals & !previous_is_true) |>
-    dplyr::mutate(section = index_microtexts(split_on))
+    dplyr::mutate(microtext = index_microtexts(split_on))
   return(aeolus)
 }
 
 #' Index each line of Aeolus to a microtext
 #'
-#' @param section_divider_col Logical column: T == headline; F == body
+#' @param microtext_divider_col Logical column: T == headline; F == body
 #'
-#' @returns A vector, same length as `section_divider_col`, numbering microtexts
+#' @returns A vector, same length as `microtext_divider_col`, numbering microtexts
 #'
-index_microtexts <- function(section_divider_col) {
+index_microtexts <- function(microtext_divider_col) {
   # Initialise empty column for group IDs.
   # When you read "Advanced R" sometime, you'll learn this
   # is good practice when using an R for-loop
-  microtexts <- rep(0, length(section_divider_col))
+  microtexts <- rep(0, length(microtext_divider_col))
 
   # We are going to "loop" over the columns of TRUEs and FALSEs.
   # Each time we encounter a T, we will add 1 to the group ID.
@@ -39,8 +39,8 @@ index_microtexts <- function(section_divider_col) {
   # of 'R for Data Science'. You rarely need to write these in
   # text analyses. In fact, it's been so long since I had to write
   # one, I had to look it up again...
-  for (idx in seq_along(section_divider_col)) {
-    boolean_value <- section_divider_col[[idx]]
+  for (idx in seq_along(microtext_divider_col)) {
+    boolean_value <- microtext_divider_col[[idx]]
     if (isTRUE(boolean_value)) {
       current_group_id <- current_group_id + 1
     }
@@ -53,14 +53,14 @@ index_microtexts <- function(section_divider_col) {
 #'
 #' @param line_tbl A tibble of Aeolus, with one row per line
 #' @param line String column containing the lines
-#' @param section Numerical column containing the index of microtexts
+#' @param microtext Numerical column containing the index of microtexts
 #'
 #' @returns A new tibble, with one row per sentence
 #' @export
-tokenise_microtexts_by_sentence <- function(line_tbl, line, section) {
+tokenise_microtexts_by_sentence <- function(line_tbl, line, microtext) {
   # Concatenate the lines in each microtext
   text_tbl <- line_tbl |>
-    dplyr::group_by({{ section }}) |>
+    dplyr::group_by({{ microtext }}) |>
     dplyr::summarise(text = stringr::str_c({{ line }}, collapse = " "))
   # Tokenise by sentence
   sent_tbl <- tidytext::unnest_tokens(
