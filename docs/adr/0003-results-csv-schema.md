@@ -10,7 +10,7 @@ We chose a single canonical long-format schema, written identically regardless o
 | `model` | raw Ollama model identifier as passed to the chat backend, e.g. `"llama3.2:1b"` (not the filesystem-safe slug used in filenames) |
 | `context_variant` | `"no_context"` \| `"ulysses_context"` \| `"media_text_context"` |
 | `granularity` | `"microtext"` \| `"sentence"` |
-| `include_headline` | boolean; see the "Unit of analysis" entry in `CONTEXT.md` for what this means at each granularity |
+| `include_headlines` | boolean; see the "Unit of analysis" entry in `CONTEXT.md` for what this means at each granularity |
 | `microtext` | integer id of the microtext (renamed from the internal `section` grouping variable) |
 | `unit_index` | 1-based position of this unit within its microtext (always `1` at `microtext` granularity; preserves sentence order at `sentence` granularity) |
 | `unit_of_analysis` | the exact text string sent to the LLM for this row's classification call |

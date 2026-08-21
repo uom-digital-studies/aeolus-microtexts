@@ -2,19 +2,21 @@
 % Please edit documentation in R/data.R
 \name{load_aeolus}
 \alias{load_aeolus}
-\title{Read in Aeolus and split into microtexts.}
+\title{Read in Aeolus and split into microtexts, optionally filtering or tokenising further.}
 \usage{
 load_aeolus(
-  path = system.file("extdata", "7_Aeolus.txt", package = "aeolusmicrotexts")
+  granularity = c("microtext", "sentence"),
+  include_headlines = c(TRUE, FALSE)
 )
 }
 \arguments{
-\item{path}{Aeolus as a .txt file. Defaults to the copy shipped with the
-package in \verb{inst/extdata/}.}
+\item{granularity}{The chosen unit of analysis for this run, either "sentence" or "microtext"}
+
+\item{include_headlines}{Whether to include the headline or filter them out of the analysis.}
 }
 \value{
 A tibble, with each line of Aeolus keyed to a microtext
 }
 \description{
-Read in Aeolus and split into microtexts.
+Read in Aeolus and split into microtexts, optionally filtering or tokenising further.
 }

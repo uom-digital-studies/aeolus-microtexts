@@ -4,13 +4,13 @@
 \alias{index_microtexts}
 \title{Index each line of Aeolus to a microtext}
 \usage{
-index_microtexts(section_divider_col)
+index_microtexts(microtext_divider_col)
 }
 \arguments{
-\item{section_divider_col}{Logical column: T == headline; F == body}
+\item{microtext_divider_col}{Logical column: T == headline; F == body}
 }
 \value{
-A vector, same length as \code{section_divider_col}, numbering microtexts
+A vector, same length as \code{microtext_divider_col}, numbering microtexts
 }
 \description{
 Index each line of Aeolus to a microtext
