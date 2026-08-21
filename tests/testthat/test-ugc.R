@@ -1,6 +1,6 @@
 test_that("analyse_ugc_ollama() still errors: RQ3 schema not yet finalised", {
-  sentence_tbl <- tibble::tibble(sentence = "placeholder")
-  expect_error(analyse_ugc_ollama(sentence_tbl, sentence), "not yet implemented")
+  unit_tbl <- tibble::tibble(unit_of_analysis = "placeholder")
+  expect_error(analyse_ugc_ollama(unit_tbl, unit_of_analysis), "not yet implemented")
 })
 
 test_that("run_ugc_pipeline() still errors: RQ3 schema not yet finalised", {
