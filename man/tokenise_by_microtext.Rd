@@ -13,8 +13,6 @@ tokenise_by_microtext(line_tbl, line, microtext_idx)
 \item{line}{String column containing the lines}
 
 \item{microtext_idx}{Numerical column containing the index of microtexts}
-
-\item{is_headline}{Unused. Retaining for API consistency.}
 }
 \value{
 A new tibble, with one row per microtext

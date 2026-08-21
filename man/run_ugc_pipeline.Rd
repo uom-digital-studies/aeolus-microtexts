@@ -5,7 +5,6 @@
 \title{Run the full Ollama UGC-resemblance pipeline: load, tokenise, score, write}
 \usage{
 run_ugc_pipeline(
-  input,
   model,
   output,
   context_variant = "no_context",
@@ -13,18 +12,16 @@ run_ugc_pipeline(
 )
 }
 \arguments{
-\item{input}{Path to the Aeolus source text; see \code{\link[=load_aeolus]{load_aeolus()}}}
-
 \item{model}{Name of the Ollama model to use}
 
-\item{output}{Path to write the scored sentences CSV to}
+\item{output}{Path to write the scored results CSV to}
 
 \item{context_variant}{See \code{\link[=context_variant_text]{context_variant_text()}}}
 
 \item{chat_backend}{Chat client constructor; see \code{\link[=analyse_with_schema]{analyse_with_schema()}}}
 }
 \value{
-The scored sentence tibble, invisibly
+The scored results tibble, invisibly
 }
 \description{
 Run the full Ollama UGC-resemblance pipeline: load, tokenise, score, write

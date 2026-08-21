@@ -2,20 +2,22 @@
 % Please edit documentation in R/nationalism.R
 \name{analyse_nationalism_ollama}
 \alias{analyse_nationalism_ollama}
-\title{Analyse the nationalist orientation of each sentence using an Ollama model}
+\title{Analyse the nationalist orientation of each unit of analysis using an Ollama model}
 \usage{
 analyse_nationalism_ollama(
-  sentence_tbl,
-  sentence,
+  unit_tbl,
+  unit_of_analysis,
   model = "llama3.1",
   context_variant = "no_context",
   chat_backend = ellmer::chat_ollama
 )
 }
 \arguments{
-\item{sentence_tbl}{A tibble with one row per sentence (e.g. \code{aeolus_sentences})}
+\item{unit_tbl}{A tibble with one row per unit of analysis (e.g. the
+output of \code{\link[=load_aeolus]{load_aeolus()}})}
 
-\item{sentence}{Column containing the sentence text to analyse}
+\item{unit_of_analysis}{Column containing the unit-of-analysis text to
+analyse}
 
 \item{model}{Name of the Ollama model to use}
 
@@ -24,7 +26,8 @@ analyse_nationalism_ollama(
 \item{chat_backend}{Chat client constructor; see \code{\link[=analyse_with_schema]{analyse_with_schema()}}}
 }
 \value{
-\code{sentence_tbl} with two new columns: \code{nationalism_label} and \code{nationalism_score}
+\code{unit_tbl} with three new columns conforming to the ADR 0003
+schema: \code{research_question} (\code{"nationalism"}), \code{label}, and \code{score}
 }
 \description{
 Thin wrapper around \code{\link[=analyse_with_schema]{analyse_with_schema()}} using \link{nationalism_schema}.

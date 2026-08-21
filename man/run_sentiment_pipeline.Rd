@@ -5,27 +5,31 @@
 \title{Run the full Ollama sentiment pipeline: load, tokenise, score, write}
 \usage{
 run_sentiment_pipeline(
-  input,
   model,
   output,
+  granularity = "sentence",
+  include_headlines = TRUE,
   context_variant = "no_context",
   chat_backend = ellmer::chat_ollama
 )
 }
 \arguments{
-\item{input}{Path to the Aeolus source text; see \code{\link[=load_aeolus]{load_aeolus()}}}
-
 \item{model}{Name of the Ollama model to use}
 
-\item{output}{Path to write the scored sentences CSV to. Parent directories
+\item{output}{Path to write the scored results CSV to. Parent directories
 are created if needed.}
+
+\item{granularity}{Unit of analysis for this run; see \code{\link[=load_aeolus]{load_aeolus()}}}
+
+\item{include_headlines}{Logical. Whether to include headlines; see
+\code{\link[=load_aeolus]{load_aeolus()}}}
 
 \item{context_variant}{See \code{\link[=context_variant_text]{context_variant_text()}}}
 
 \item{chat_backend}{Chat client constructor; see \code{\link[=analyse_with_schema]{analyse_with_schema()}}}
 }
 \value{
-The scored sentence tibble, invisibly
+The scored results tibble, invisibly
 }
 \description{
 Thin wrapper around \code{\link[=run_pipeline_with_schema]{run_pipeline_with_schema()}} using \link{sentiment_schema}.

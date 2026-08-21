@@ -2,8 +2,9 @@
 #
 # Structurally mimics the bit of the ellmer chat client interface that
 # analyse_with_schema() relies on: `$clone()` (stateless clone per call) and
-# `$chat_structured(text, type)` (returns a canned response). This lets us
-# exercise the pipeline logic without ever contacting a real Ollama server.
+# `$chat_structured(text, type)` (returns a canned response, one per unit of
+# analysis). This lets us exercise the pipeline logic without ever
+# contacting a real Ollama server.
 
 #' @param responses A list of `list(label = , score = )` responses, one per
 #'   expected `chat_structured()` call, returned in order.

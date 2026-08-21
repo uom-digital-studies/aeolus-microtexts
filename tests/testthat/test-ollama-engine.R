@@ -25,24 +25,25 @@ test_that("build_system_prompt() errors on an unknown context variant", {
   expect_error(build_system_prompt(test_schema, "bogus_context"), "Unknown context_variant")
 })
 
-test_that("analyse_with_schema() scores each row and names columns from the schema", {
-  sentence_tbl <- tibble::tibble(sentence = c("first sentence", "second sentence"))
+test_that("analyse_with_schema() scores each row and adds the ADR 0003 columns", {
+  unit_tbl <- tibble::tibble(unit_of_analysis = c("first unit", "second unit"))
   backend <- fake_chat_backend(list(
     list(label = "a", score = 0.5),
     list(label = "b", score = -0.2)
   ))
 
-  result <- analyse_with_schema(sentence_tbl, sentence, test_schema,
+  result <- analyse_with_schema(unit_tbl, unit_of_analysis, test_schema,
     chat_backend = backend
   )
 
   expect_equal(nrow(result), 2)
-  expect_equal(result$widget_label, c("a", "b"))
-  expect_equal(result$widget_score, c(0.5, -0.2))
+  expect_equal(result$research_question, c("widget", "widget"))
+  expect_equal(result$label, c("a", "b"))
+  expect_equal(result$score, c(0.5, -0.2))
 })
 
 test_that("analyse_with_schema() passes model/context variant through to chat_backend", {
-  sentence_tbl <- tibble::tibble(sentence = "only sentence")
+  unit_tbl <- tibble::tibble(unit_of_analysis = "only unit")
   seen <- new.env()
   backend <- function(system_prompt, model) {
     seen$system_prompt <- system_prompt
@@ -50,7 +51,7 @@ test_that("analyse_with_schema() passes model/context variant through to chat_ba
     fake_chat_backend(list(list(label = "a", score = 0)))(system_prompt, model)
   }
 
-  analyse_with_schema(sentence_tbl, sentence, test_schema,
+  analyse_with_schema(unit_tbl, unit_of_analysis, test_schema,
     model = "custom-model", context_variant = "media_text_context", chat_backend = backend
   )
 
@@ -58,18 +59,31 @@ test_that("analyse_with_schema() passes model/context variant through to chat_ba
   expect_true(grepl("social media content", seen$system_prompt, fixed = TRUE))
 })
 
-test_that("run_pipeline_with_schema() loads, scores and writes a CSV", {
-  input <- withr::local_tempfile()
-  writeLines(c("HEADLINE", "Body sentence one."), input)
+test_that("run_pipeline_with_schema() loads, scores and writes a CSV matching the ADR 0003 schema", {
   output <- withr::local_tempfile(fileext = ".csv")
-  backend <- fake_chat_backend(list(list(label = "a", score = 0.1)))
+  aeolus <- load_aeolus("sentence", TRUE)
+  backend <- fake_chat_backend(
+    rep(list(list(label = "a", score = 0.1)), nrow(aeolus))
+  )
 
-  result <- run_pipeline_with_schema(input, "fake-model", output, test_schema,
-    chat_backend = backend
+  result <- run_pipeline_with_schema("fake-model", output, test_schema,
+    granularity = "sentence", include_headlines = TRUE, chat_backend = backend
   )
 
   expect_true(file.exists(output))
   written <- readr::read_csv(output, show_col_types = FALSE)
-  expect_equal(written$widget_label, "a")
-  expect_equal(result$widget_score, 0.1)
+
+  expect_equal(
+    names(written),
+    c("research_question", "model", "context_variant", "granularity",
+      "include_headlines", "microtext", "unit_index", "unit_of_analysis",
+      "label", "score"
+    )
+  )
+  expect_equal(unique(written$research_question), "widget")
+  expect_equal(unique(written$model), "fake-model")
+  expect_equal(unique(written$context_variant), "no_context")
+  expect_equal(unique(written$label), "a")
+  expect_equal(unique(written$score), 0.1)
+  expect_equal(result, written, ignore_attr = TRUE)
 })

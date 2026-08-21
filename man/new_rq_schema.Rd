@@ -7,8 +7,8 @@
 new_rq_schema(name, type)
 }
 \arguments{
-\item{name}{Short RQ identifier (e.g. \code{"sentiment"}), used to derive the
-\verb{<name>_label}/\verb{<name>_score} output column names}
+\item{name}{Short RQ identifier (e.g. \code{"sentiment"}), recorded verbatim in
+the \code{research_question} output column (see \code{\link[=analyse_with_schema]{analyse_with_schema()}})}
 
 \item{type}{An \code{ellmer::type_object()} describing the structured response;
 its \verb{@description} is used as the task instruction}

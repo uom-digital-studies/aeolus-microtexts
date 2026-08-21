@@ -21,18 +21,21 @@ ugc_schema <- new_rq_schema(
   )
 )
 
-#' Analyse how closely each sentence resembles social media content, using an Ollama model
+#' Analyse how closely each unit of analysis resembles social media content, using an Ollama model
 #'
-#' @param sentence_tbl A tibble with one row per sentence (e.g. `aeolus_sentences`)
-#' @param sentence Column containing the sentence text to analyse
+#' @param unit_tbl A tibble with one row per unit of analysis (e.g. the
+#'   output of [load_aeolus()])
+#' @param unit_of_analysis Column containing the unit-of-analysis text to
+#'   analyse
 #' @param model Name of the Ollama model to use
 #' @param context_variant See [context_variant_text()]
 #' @param chat_backend Chat client constructor; see [analyse_with_schema()]
 #'
-#' @returns `sentence_tbl` with two new columns: `ugc_label` and `ugc_score`
+#' @returns `unit_tbl` with three new columns conforming to the ADR 0003
+#'   schema: `research_question` (`"ugc"`), `label`, and `score`
 #' @export
-analyse_ugc_ollama <- function(sentence_tbl,
-                                sentence,
+analyse_ugc_ollama <- function(unit_tbl,
+                                unit_of_analysis,
                                 model = "llama3.1",
                                 context_variant = "no_context",
                                 chat_backend = ellmer::chat_ollama) {
@@ -44,15 +47,14 @@ analyse_ugc_ollama <- function(sentence_tbl,
 
 #' Run the full Ollama UGC-resemblance pipeline: load, tokenise, score, write
 #'
-#' @param input Path to the Aeolus source text; see [load_aeolus()]
 #' @param model Name of the Ollama model to use
-#' @param output Path to write the scored sentences CSV to
+#' @param output Path to write the scored results CSV to
 #' @param context_variant See [context_variant_text()]
 #' @param chat_backend Chat client constructor; see [analyse_with_schema()]
 #'
-#' @returns The scored sentence tibble, invisibly
+#' @returns The scored results tibble, invisibly
 #' @export
-run_ugc_pipeline <- function(input, model, output,
+run_ugc_pipeline <- function(model, output,
                               context_variant = "no_context",
                               chat_backend = ellmer::chat_ollama) {
   # TODO(RQ3): remove this guard and delegate to run_pipeline_with_schema()

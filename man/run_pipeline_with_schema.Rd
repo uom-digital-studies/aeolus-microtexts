@@ -6,30 +6,36 @@
 tokenise, score, write}
 \usage{
 run_pipeline_with_schema(
-  input,
   model,
   output,
   schema,
+  granularity = "sentence",
+  include_headlines = TRUE,
   context_variant = "no_context",
   chat_backend = ellmer::chat_ollama
 )
 }
 \arguments{
-\item{input}{Path to the Aeolus source text; see \code{\link[=load_aeolus]{load_aeolus()}}}
-
 \item{model}{Name of the Ollama model to use}
 
-\item{output}{Path to write the scored sentences CSV to. Parent
+\item{output}{Path to write the scored results CSV to. Parent
 directories are created if needed}
 
 \item{schema}{An \code{rq_schema}, see \code{\link[=new_rq_schema]{new_rq_schema()}}}
+
+\item{granularity}{Unit of analysis for this run, either \code{"sentence"} or
+\code{"microtext"}; see \code{\link[=load_aeolus]{load_aeolus()}}}
+
+\item{include_headlines}{Logical. Whether to include headlines in the
+analysed text; see \code{\link[=load_aeolus]{load_aeolus()}}}
 
 \item{context_variant}{See \code{\link[=context_variant_text]{context_variant_text()}}}
 
 \item{chat_backend}{Chat client constructor; see \code{\link[=analyse_with_schema]{analyse_with_schema()}}}
 }
 \value{
-The scored sentence tibble, invisibly
+The scored results tibble (matching the ADR 0003 CSV schema),
+invisibly
 }
 \description{
 The reusable unit called by each RQ's \verb{run_*_pipeline()} wrapper, and, in

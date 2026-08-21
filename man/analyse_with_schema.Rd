@@ -2,11 +2,11 @@
 % Please edit documentation in R/ollama-engine.R
 \name{analyse_with_schema}
 \alias{analyse_with_schema}
-\title{Analyse each sentence in a tibble against a research-question schema}
+\title{Analyse each unit of analysis in a tibble against a research-question schema}
 \usage{
 analyse_with_schema(
-  sentence_tbl,
-  sentence,
+  aeolus_tbl,
+  unit_of_analysis,
   schema,
   model = "llama3.1",
   context_variant = "no_context",
@@ -15,9 +15,11 @@ analyse_with_schema(
 )
 }
 \arguments{
-\item{sentence_tbl}{A tibble with one row per sentence (e.g. \code{aeolus_sentences})}
+\item{aeolus_tbl}{A tibble with one row per unit of analysis (e.g. the
+output of \code{\link[=load_aeolus]{load_aeolus()}})}
 
-\item{sentence}{Column containing the sentence text to analyse}
+\item{unit_of_analysis}{Column containing the unit-of-analysis text to
+analyse}
 
 \item{schema}{An \code{rq_schema}, see \code{\link[=new_rq_schema]{new_rq_schema()}}}
 
@@ -26,8 +28,9 @@ analyse_with_schema(
 \item{context_variant}{See \code{\link[=context_variant_text]{context_variant_text()}}; ignored if
 \code{system_prompt} is supplied directly}
 
-\item{system_prompt}{Instructions given to the model before each sentence;
-defaults to \code{\link[=build_system_prompt]{build_system_prompt()}} applied to \code{schema}/\code{context_variant}}
+\item{system_prompt}{Instructions given to the model before each unit of
+analysis; defaults to \code{\link[=build_system_prompt]{build_system_prompt()}} applied to
+\code{schema}/\code{context_variant}}
 
 \item{chat_backend}{Chat client constructor with signature
 \verb{function(system_prompt, model)}, returning an object with
@@ -35,9 +38,9 @@ defaults to \code{\link[=build_system_prompt]{build_system_prompt()}} applied to
 \code{ellmer::chat_ollama}; swap in a fake for tests}
 }
 \value{
-\code{sentence_tbl} with two new columns, named \verb{<schema$name>_label}
-and \verb{<schema$name>_score}
+\code{aeolus_tbl} with three new columns conforming to the ADR 0003
+schema: \code{research_question} (\code{schema$name}), \code{label}, and \code{score}
 }
 \description{
-Analyse each sentence in a tibble against a research-question schema
+Analyse each unit of analysis in a tibble against a research-question schema
 }

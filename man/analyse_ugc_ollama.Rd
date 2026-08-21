@@ -2,20 +2,22 @@
 % Please edit documentation in R/ugc.R
 \name{analyse_ugc_ollama}
 \alias{analyse_ugc_ollama}
-\title{Analyse how closely each sentence resembles social media content, using an Ollama model}
+\title{Analyse how closely each unit of analysis resembles social media content, using an Ollama model}
 \usage{
 analyse_ugc_ollama(
-  sentence_tbl,
-  sentence,
+  unit_tbl,
+  unit_of_analysis,
   model = "llama3.1",
   context_variant = "no_context",
   chat_backend = ellmer::chat_ollama
 )
 }
 \arguments{
-\item{sentence_tbl}{A tibble with one row per sentence (e.g. \code{aeolus_sentences})}
+\item{unit_tbl}{A tibble with one row per unit of analysis (e.g. the
+output of \code{\link[=load_aeolus]{load_aeolus()}})}
 
-\item{sentence}{Column containing the sentence text to analyse}
+\item{unit_of_analysis}{Column containing the unit-of-analysis text to
+analyse}
 
 \item{model}{Name of the Ollama model to use}
 
@@ -24,8 +26,9 @@ analyse_ugc_ollama(
 \item{chat_backend}{Chat client constructor; see \code{\link[=analyse_with_schema]{analyse_with_schema()}}}
 }
 \value{
-\code{sentence_tbl} with two new columns: \code{ugc_label} and \code{ugc_score}
+\code{unit_tbl} with three new columns conforming to the ADR 0003
+schema: \code{research_question} (\code{"ugc"}), \code{label}, and \code{score}
 }
 \description{
-Analyse how closely each sentence resembles social media content, using an Ollama model
+Analyse how closely each unit of analysis resembles social media content, using an Ollama model
 }
