@@ -7,21 +7,104 @@
 # structure notes) can share it without duplicating controller/target
 # construction logic.
 
+#' The project's Ollama pull-cache directory for models not centrally available
+#'
+#' Computed as a fixed sibling of the repo checkout root (e.g.
+#' `<checkout>/../ollama_models`) rather than sourced from an environment
+#' variable: since the whole repo now lives inside the confidential Spartan
+#' project directory (that directory is the confidentiality boundary), the
+#' checkout's own location is no longer sensitive, so this path can be
+#' derived automatically instead of threaded through config. Uses
+#' [rprojroot::find_root()] to locate the checkout root robustly regardless
+#' of the current working directory.
+#'
+#' @param start Directory to start searching upward from for the repo root
+#'
+#' @returns A single string: the absolute path to the project pull-cache
+#'   directory
+#' @keywords internal
+default_ollama_project_models_dir <- function(start = ".") {
+  repo_root <- rprojroot::find_root(rprojroot::is_r_package, path = start)
+  file.path(dirname(repo_root), "ollama_models")
+}
+
 #' Script lines run on an Ollama worker node before it starts pulling tasks
 #'
-#' Starts `ollama serve` in the background, waits for it to respond, then
-#' pulls the model once so every task the worker runs afterwards reuses the
-#' same warm server/model.
+#' Loads the module chain Spartan's GPU partition requires for Ollama
+#' (`GCCcore` -> `ollama` -> `foss`/`R`, matching the example scripts on
+#' the server, points `OLLAMA_MODELS` at the shared model
+#' directory, starts the cluster's `run_ollama_server` wrapper (Spartan's
+#' own wrapper around `ollama serve` — not called directly) in the
+#' background, waits for it to respond, then pulls the model once so every
+#' task the worker runs afterwards reuses the same warm server/model.
+#'
+#' The leading `#SBATCH --gres=gpu:1` line requests a GPU.
+#' `crew.cluster::crew_options_slurm()` has no dedicated `gres` argument,
+#' but `sbatch` keeps scanning for `#SBATCH` directives up to the first
+#' non-comment line, and `crew.cluster` places `script_lines` immediately
+#' after its own generated header with no other commands in between — so a
+#' `#SBATCH` line is still honoured here as long as it comes first.
 #'
 #' @param model Ollama model identifier
+#' @param source Where `model` lives: `"central"` for the cluster-wide
+#'   shared store (path from the required `OLLAMA_CENTRAL_MODELS_DIR`
+#'   environment variable — not git-tracked, since the real path is
+#'   private infra detail) or `"project"` for this project's own
+#'   pull-cache (a fixed sibling of the repo checkout, see
+#'   [default_ollama_project_models_dir()])
 #'
 #' @returns A character vector of shell script lines
 #' @keywords internal
-ollama_worker_script_lines <- function(model) {
+ollama_worker_script_lines <- function(model, source) {
+  ollama_models_dir <- resolve_ollama_models_dir(source)
   c(
-    "ollama serve &",
+    "#SBATCH --gres=gpu:1",
+    "module purge",
+    "module load GCCcore/11.3.0",
+    "module load ollama/0.9.1-CUDA-12.5.1",
+    "module load foss/2022a R/4.2.2",
+    paste0("export OLLAMA_MODELS=", ollama_models_dir),
+    "run_ollama_server &",
     "for i in $(seq 1 30); do curl -sf http://127.0.0.1:11434/ && break; sleep 2; done",
     paste("ollama pull", model)
+  )
+}
+
+#' Resolve the `OLLAMA_MODELS` directory for a model's declared source
+#'
+#' The cluster's `ollama` version (0.9.1) doesn't support multi-path
+#' `OLLAMA_MODELS`, so each model resolves to exactly one directory: the
+#' shared, non-confidential central store (`source == "central"`, path from
+#' `OLLAMA_CENTRAL_MODELS_DIR`, required — fails fast if unset) or this
+#' project's own pull-cache for models not centrally available (`source ==
+#' "project"`, [default_ollama_project_models_dir()]).
+#'
+#' @param source `"central"` or `"project"`
+#' @param project_models_dir Directory to use when `source == "project"`
+#'
+#' @returns A single string: the resolved `OLLAMA_MODELS` directory
+#' @keywords internal
+resolve_ollama_models_dir <- function(source,
+                                       project_models_dir = default_ollama_project_models_dir()) {
+  if (identical(source, "central")) {
+    central_dir <- Sys.getenv("OLLAMA_CENTRAL_MODELS_DIR", unset = "")
+    if (identical(central_dir, "")) {
+      stop(
+        "OLLAMA_CENTRAL_MODELS_DIR is not set; export it to the cluster's ",
+        "shared central model store before building the pipeline",
+        call. = FALSE
+      )
+    }
+    return(central_dir)
+  }
+
+  if (identical(source, "project")) {
+    return(project_models_dir)
+  }
+
+  stop(
+    "Unknown model source '", source, "'; must be 'central' or 'project'",
+    call. = FALSE
   )
 }
 
@@ -48,27 +131,32 @@ sanitise_target_name <- function(model) {
 #' `crew::crew_controller_group()` and pass to
 #' `tar_option_set(controller = ...)`.
 #'
-#' @param models Character vector of Ollama model identifiers
+#' @param models A tibble as returned by [read_models()], with `model` and
+#'   `source` columns — `source` determines which directory
+#'   [ollama_worker_script_lines()] points `OLLAMA_MODELS` at for that
+#'   model's worker, but controllers are still keyed/named off the plain
+#'   `model` string
 #' @param resources A list as returned by [read_slurm_resources()];
 #'   per-model overrides are resolved via [resolve_slurm_resources()]
+#'   keyed off `models$model`
 #'
 #' @returns A list of `crew_controller_slurm` objects, one per model, each
 #'   named for its model
 #' @export
 build_slurm_controllers <- function(models, resources = read_slurm_resources()) {
-  controllers <- purrr::map(models, function(model) {
+  controllers <- purrr::pmap(models, function(model, source) {
     model_resources <- resolve_slurm_resources(model, resources = resources)
     crew.cluster::crew_controller_slurm(
       name = model,
       workers = 1,
       options_cluster = rlang::exec(
         crew.cluster::crew_options_slurm,
-        script_lines = ollama_worker_script_lines(model),
+        script_lines = ollama_worker_script_lines(model, source),
         !!!model_resources
       )
     )
   })
-  rlang::set_names(controllers, models)
+  rlang::set_names(controllers, models$model)
 }
 
 #' Build the per-model grid/scored `targets` target pairs for a sweep

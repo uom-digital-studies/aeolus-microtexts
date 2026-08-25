@@ -1,4 +1,5 @@
 models:
-  - llama3.2:1b
-  - llama3.1
-  - mistral
+  - name: llama3.1:8b
+    source: central
+  - name: mistral
+    source: project

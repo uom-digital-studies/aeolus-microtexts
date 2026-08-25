@@ -1,10 +1,18 @@
 default:
-  partition: null
+  # gpu-a100-short: fine for the smoke test (30 min cap); revisit for the
+  # real sweep (TODO.md).
+  partition: gpu-a100-short
   cpus_per_task: 4
   memory_gigabytes_per_cpu: 4
   time_minutes: 120
 models:
-  llama3.1:
+  llama3.1:8b:
     memory_gigabytes_per_cpu: 8
   mistral:
     memory_gigabytes_per_cpu: 8
+  llama3.1:70b:
+    # cpus_per_task stays at the default (4), so 4 * 20 = 80GB total —
+    # needs >=64GB RAM per node specs (495000MB/32 cores); gres=gpu:1
+    # (hardcoded in ollama_worker_script_lines()) matches the 1-GPU
+    # requirement in private/2025README.md.
+    memory_gigabytes_per_cpu: 20

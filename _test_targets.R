@@ -6,8 +6,10 @@
 #
 #   Rscript -e 'targets::tar_make(script = "_test_targets.R", store = "_test_targets_store")'
 #
-# `llama3.2:1b` is the smallest model in `models.yml`, chosen purely to
-# minimise pull time/memory for this smoke test — see
+# `llama3.1:70b` is already in the cluster's central model store, so this
+# smoke test needs no pull — chosen for that reason, not because it's small
+# (it needs the `llama3.1:70b` override in `slurm-resources.yml`). Declared
+# inline rather than read from `models.yml` since it's smoke-test-only. See
 # docs/hpc-smoke-test.md for the rest of the manual validation steps
 # (syncing the repo, installing the package, watching SLURM/logs, checking
 # output) that this script doesn't automate.
@@ -20,7 +22,7 @@ tar_option_set(
   imports = "aeolusmicrotexts"
 )
 
-test_models <- "llama3.2:1b"
+test_models <- tibble::tibble(model = "llama3.1:70b", source = "central")
 
 tar_option_set(
   controller = rlang::exec(crew::crew_controller_group, !!!build_slurm_controllers(test_models))
@@ -29,7 +31,7 @@ tar_option_set(
 list(
   tar_target(run_id, generate_run_id()),
   build_grid_targets(
-    test_models,
+    test_models$model,
     research_questions = "sentiment",
     context_variants = "no_context",
     granularities = "sentence",

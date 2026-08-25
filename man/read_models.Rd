@@ -8,10 +8,12 @@ read_models(path = "models.yml")
 }
 \arguments{
 \item{path}{Path to the YAML file; see \code{models.yml} at the repo root for
-the expected shape (a top-level \code{models} sequence)}
+the expected shape (a top-level \code{models} sequence of objects, each with
+a \code{name} and a \code{source} of either \code{"central"} or \code{"project"})}
 }
 \value{
-A character vector of Ollama model identifiers
+A tibble with columns \code{model} (Ollama model identifier) and
+\code{source} (\code{"central"} or \code{"project"}), one row per declared model
 }
 \description{
 Read the list of models to sweep over

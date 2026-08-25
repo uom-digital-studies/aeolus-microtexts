@@ -10,21 +10,53 @@ test_resources <- list(
   )
 )
 
-test_that("build_slurm_controllers() builds one named controller per model", {
-  controllers <- build_slurm_controllers(
-    c("llama3.1", "mistral"),
-    resources = test_resources
+test_central_models_dir <- "/data/gpfs/shared/ollama_models"
+test_project_models_dir <- "/data/gpfs/projects/test-project/ollama_models"
+
+test_models_tbl <- tibble::tibble(
+  model = c("llama3.1", "mistral"),
+  source = c("central", "project")
+)
+
+test_that("default_ollama_project_models_dir() resolves to a sibling of the repo checkout root", {
+  expect_equal(
+    default_ollama_project_models_dir(start = testthat::test_path("..", "..")),
+    file.path(dirname(rprojroot::find_package_root_file()), "ollama_models")
   )
+})
+
+test_that("resolve_ollama_models_dir() reads the central store from OLLAMA_CENTRAL_MODELS_DIR", {
+  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
+  expect_equal(resolve_ollama_models_dir("central"), test_central_models_dir)
+})
+
+test_that("resolve_ollama_models_dir() errors clearly when OLLAMA_CENTRAL_MODELS_DIR is unset", {
+  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = NA)
+  expect_error(resolve_ollama_models_dir("central"), "OLLAMA_CENTRAL_MODELS_DIR")
+})
+
+test_that("resolve_ollama_models_dir() uses the given project pull-cache dir for source = project", {
+  expect_equal(
+    resolve_ollama_models_dir("project", project_models_dir = test_project_models_dir),
+    test_project_models_dir
+  )
+})
+
+test_that("resolve_ollama_models_dir() errors on an unknown source", {
+  expect_error(resolve_ollama_models_dir("elsewhere"), "Unknown model source")
+})
+
+test_that("build_slurm_controllers() builds one named controller per model", {
+  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
+  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources)
 
   expect_equal(names(controllers), c("llama3.1", "mistral"))
   expect_true(all(vapply(controllers, inherits, logical(1), "crew_class_controller")))
 })
 
 test_that("build_slurm_controllers() applies resolved per-model resources", {
-  controllers <- build_slurm_controllers(
-    c("llama3.1", "mistral"),
-    resources = test_resources
-  )
+  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
+  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources)
 
   llama_options <- controllers[["llama3.1"]]$launcher$options_cluster
   mistral_options <- controllers[["mistral"]]$launcher$options_cluster
@@ -37,10 +69,8 @@ test_that("build_slurm_controllers() applies resolved per-model resources", {
 })
 
 test_that("build_slurm_controllers() embeds the ollama pull line for each model", {
-  controllers <- build_slurm_controllers(
-    c("llama3.1", "mistral"),
-    resources = test_resources
-  )
+  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
+  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources)
 
   expect_true(any(grepl(
     "ollama pull llama3.1",
@@ -50,6 +80,56 @@ test_that("build_slurm_controllers() embeds the ollama pull line for each model"
     "ollama pull mistral",
     controllers[["mistral"]]$launcher$options_cluster$script_lines
   )))
+})
+
+test_that("build_slurm_controllers() embeds the GPU request, module loads, and OLLAMA_MODELS export", {
+  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
+  controllers <- build_slurm_controllers(
+    tibble::tibble(model = "llama3.1", source = "central"),
+    resources = test_resources
+  )
+
+  lines <- controllers[["llama3.1"]]$launcher$options_cluster$script_lines
+
+  # Must be first: sbatch only honours #SBATCH directives up to the first
+  # non-comment line, and crew.cluster places script_lines right after its
+  # own generated header.
+  expect_equal(lines[1], "#SBATCH --gres=gpu:1")
+  expect_true(any(grepl("^module load GCCcore/", lines)))
+  expect_true(any(grepl("^module load ollama/", lines)))
+  expect_true(any(grepl("^module load foss/.* R/", lines)))
+  expect_true(any(grepl("^run_ollama_server &$", lines)))
+  expect_true(any(grepl(
+    paste0("^export OLLAMA_MODELS=", test_central_models_dir, "$"),
+    lines
+  )))
+})
+
+test_that("build_slurm_controllers() points project-sourced models at the project pull-cache", {
+  controllers <- build_slurm_controllers(
+    tibble::tibble(model = "mistral", source = "project"),
+    resources = test_resources
+  )
+
+  lines <- controllers[["mistral"]]$launcher$options_cluster$script_lines
+  expected_dir <- default_ollama_project_models_dir()
+
+  expect_true(any(grepl(
+    paste0("^export OLLAMA_MODELS=", expected_dir, "$"),
+    lines
+  )))
+})
+
+test_that("build_slurm_controllers() errors clearly when a central model has no OLLAMA_CENTRAL_MODELS_DIR", {
+  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = NA)
+
+  expect_error(
+    build_slurm_controllers(
+      tibble::tibble(model = "llama3.1", source = "central"),
+      resources = test_resources
+    ),
+    "OLLAMA_CENTRAL_MODELS_DIR"
+  )
 })
 
 test_that("sanitise_target_name() collapses characters invalid in target names", {

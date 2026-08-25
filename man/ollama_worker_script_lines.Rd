@@ -4,17 +4,36 @@
 \alias{ollama_worker_script_lines}
 \title{Script lines run on an Ollama worker node before it starts pulling tasks}
 \usage{
-ollama_worker_script_lines(model)
+ollama_worker_script_lines(model, source)
 }
 \arguments{
 \item{model}{Ollama model identifier}
+
+\item{source}{Where \code{model} lives: \code{"central"} for the cluster-wide
+shared store (path from the required \code{OLLAMA_CENTRAL_MODELS_DIR}
+environment variable — not git-tracked, since the real path is
+private infra detail) or \code{"project"} for this project's own
+pull-cache (a fixed sibling of the repo checkout, see
+\code{\link[=default_ollama_project_models_dir]{default_ollama_project_models_dir()}})}
 }
 \value{
 A character vector of shell script lines
 }
 \description{
-Starts \verb{ollama serve} in the background, waits for it to respond, then
-pulls the model once so every task the worker runs afterwards reuses the
-same warm server/model.
+Loads the module chain Spartan's GPU partition requires for Ollama
+(\code{GCCcore} -> \code{ollama} -> \code{foss}/\code{R}, matching the example scripts on
+the server, points \code{OLLAMA_MODELS} at the shared model
+directory, starts the cluster's \code{run_ollama_server} wrapper (Spartan's
+own wrapper around \verb{ollama serve} — not called directly) in the
+background, waits for it to respond, then pulls the model once so every
+task the worker runs afterwards reuses the same warm server/model.
+}
+\details{
+The leading \verb{#SBATCH --gres=gpu:1} line requests a GPU.
+\code{crew.cluster::crew_options_slurm()} has no dedicated \code{gres} argument,
+but \code{sbatch} keeps scanning for \verb{#SBATCH} directives up to the first
+non-comment line, and \code{crew.cluster} places \code{script_lines} immediately
+after its own generated header with no other commands in between — so a
+\verb{#SBATCH} line is still honoured here as long as it comes first.
 }
 \keyword{internal}

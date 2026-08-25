@@ -7,10 +7,15 @@
 build_slurm_controllers(models, resources = read_slurm_resources())
 }
 \arguments{
-\item{models}{Character vector of Ollama model identifiers}
+\item{models}{A tibble as returned by \code{\link[=read_models]{read_models()}}, with \code{model} and
+\code{source} columns — \code{source} determines which directory
+\code{\link[=ollama_worker_script_lines]{ollama_worker_script_lines()}} points \code{OLLAMA_MODELS} at for that
+model's worker, but controllers are still keyed/named off the plain
+\code{model} string}
 
 \item{resources}{A list as returned by \code{\link[=read_slurm_resources]{read_slurm_resources()}};
-per-model overrides are resolved via \code{\link[=resolve_slurm_resources]{resolve_slurm_resources()}}}
+per-model overrides are resolved via \code{\link[=resolve_slurm_resources]{resolve_slurm_resources()}}
+keyed off \code{models$model}}
 }
 \value{
 A list of \code{crew_controller_slurm} objects, one per model, each
