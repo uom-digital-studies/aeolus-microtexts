@@ -17,7 +17,8 @@ A named list of resolved SLURM options
 \description{
 Merges the \code{default} block with any \code{models[[model]]} override,
 per-field — an override only replaces the fields it names, leaving the
-rest of \code{default} untouched. Field names deliberately mirror
-\code{crew.cluster::crew_options_slurm()} arguments so the result can be
-spread straight into it.
+rest of \code{default} untouched. Field names deliberately match
+\code{crew.cluster::crew_options_slurm()} arguments (\code{partition},
+\code{cpus_per_task}, \code{memory_gigabytes_per_cpu}, \code{time_minutes}) so the
+result can be spread straight into it.
 }

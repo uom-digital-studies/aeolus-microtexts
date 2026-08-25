@@ -35,10 +35,14 @@ Collate:
     'ollama-engine.R'
     'nationalism.R'
     'pipeline-grid.R'
+    'pipeline-orchestration.R'
+    'read-models.R'
     'sentiment-llm.R'
     'slurm-resources.R'
     'ugc.R'
 Imports: 
+    crew,
+    crew.cluster,
     dplyr,
     ellmer,
     purrr,
@@ -46,6 +50,7 @@ Imports:
     rlang,
     S7,
     stringr,
+    targets,
     tibble,
     tidyr,
     tidytext

@@ -29,29 +29,18 @@ Per ADR 0004, workers need `aeolusmicrotexts` formally installed, not
 ssh spartan 'cd ~/aeolus-microtexts && Rscript -e "renv::restore(); renv::install(\".\")"'
 ```
 
-## 3. Shrink the grid to a single row
+## 3. Confirm the smoke-test pipeline is valid
 
-On the cluster (or locally if `_targets.R` is edited there directly), start
-an R session in the repo and temporarily override the grid target before
-running the pipeline — don't commit this change:
+`_test_targets.R` (a trimmed sibling of `_targets.R`, sharing its
+controller/target builders from `R/pipeline-orchestration.R`) already
+defines a single-row grid — `llama3.2:1b`, `sentiment`, `no_context`,
+`sentence`, headlines included — writing to its own `test-results/`
+directory and `_test_targets_store` store, so it never touches the real
+pipeline's `_targets/` store or `results/` output. No manual editing or
+reverting needed; just confirm it's valid before submitting:
 
-```r
-# In an R console on spartan, inside ~/aeolus-microtexts
-library(targets)
-
-# Confirm the pipeline is otherwise valid first:
-tar_manifest()
-
-# Temporarily replace the grid target's single-row inputs for this run only,
-# e.g. by editing _targets.R's `build_analysis_grid()` call to:
-#   build_analysis_grid(
-#     models = "llama3.2:1b",
-#     research_questions = "sentiment",
-#     context_variants = "no_context",
-#     granularities = "sentence",
-#     include_headlines = TRUE
-#   )
-# then revert once the smoke test passes.
+```zsh
+ssh spartan 'cd ~/aeolus-microtexts && Rscript -e "targets::tar_manifest(script = \"_test_targets.R\", store = \"_test_targets_store\")"'
 ```
 
 `llama3.2:1b` is the smallest model in `models.yml` and is a reasonable
@@ -62,7 +51,7 @@ about result quality.
 ## 4. Submit and watch it run
 
 ```zsh
-ssh spartan 'cd ~/aeolus-microtexts && Rscript -e "targets::tar_make()"'
+ssh spartan 'cd ~/aeolus-microtexts && Rscript -e "targets::tar_make(script = \"_test_targets.R\", store = \"_test_targets_store\")"'
 ```
 
 In a second terminal, watch the job queue to confirm SLURM actually accepts
@@ -83,7 +72,7 @@ ssh spartan 'tail -f ~/aeolus-microtexts/crew-logs/*.log'
 ## 5. Confirm the output
 
 ```zsh
-ssh spartan 'cat ~/aeolus-microtexts/results/*.csv'
+ssh spartan 'cat ~/aeolus-microtexts/test-results/*.csv'
 ```
 
 Check the CSV matches the schema in `docs/adr/0003-results-csv-schema.md`
@@ -91,7 +80,8 @@ Check the CSV matches the schema in `docs/adr/0003-results-csv-schema.md`
 `granularity`, `include_headline`, `microtext`, `unit_index`,
 `unit_of_analysis`, `label`, `score`).
 
-## 6. Revert the grid override
+## 6. Clean up
 
-Undo the temporary single-row `build_analysis_grid()` call from step 3
-before committing `_targets.R`.
+`test-results/` and `_test_targets_store/` are gitignored, so nothing to
+revert or commit — delete them on the cluster once you're done, e.g. `ssh
+spartan 'rm -rf ~/aeolus-microtexts/test-results ~/aeolus-microtexts/_test_targets_store'`.

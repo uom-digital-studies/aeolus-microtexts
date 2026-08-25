@@ -1,10 +1,10 @@
 default:
-  slurm_partition: null
-  slurm_cpus_per_task: 4
-  slurm_memory_gigabytes_per_cpu: 4
-  slurm_time_minutes: 120
+  partition: null
+  cpus_per_task: 4
+  memory_gigabytes_per_cpu: 4
+  time_minutes: 120
 models:
   llama3.1:
-    slurm_memory_gigabytes_per_cpu: 8
+    memory_gigabytes_per_cpu: 8
   mistral:
-    slurm_memory_gigabytes_per_cpu: 8
+    memory_gigabytes_per_cpu: 8

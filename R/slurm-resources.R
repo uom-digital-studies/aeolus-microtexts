@@ -33,9 +33,10 @@ read_slurm_resources <- function(path = "slurm-resources.yml") {
 #'
 #' Merges the `default` block with any `models[[model]]` override,
 #' per-field — an override only replaces the fields it names, leaving the
-#' rest of `default` untouched. Field names deliberately mirror
-#' `crew.cluster::crew_options_slurm()` arguments so the result can be
-#' spread straight into it.
+#' rest of `default` untouched. Field names deliberately match
+#' `crew.cluster::crew_options_slurm()` arguments (`partition`,
+#' `cpus_per_task`, `memory_gigabytes_per_cpu`, `time_minutes`) so the
+#' result can be spread straight into it.
 #'
 #' @param model Model identifier to look up an override for
 #' @param resources A list as returned by [read_slurm_resources()]

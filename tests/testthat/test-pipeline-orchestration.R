@@ -1,0 +1,142 @@
+test_resources <- list(
+  default = list(
+    partition = NULL,
+    cpus_per_task = 4,
+    memory_gigabytes_per_cpu = 4,
+    time_minutes = 120
+  ),
+  models = list(
+    "llama3.1" = list(memory_gigabytes_per_cpu = 8)
+  )
+)
+
+test_that("build_slurm_controllers() builds one named controller per model", {
+  controllers <- build_slurm_controllers(
+    c("llama3.1", "mistral"),
+    resources = test_resources
+  )
+
+  expect_equal(names(controllers), c("llama3.1", "mistral"))
+  expect_true(all(vapply(controllers, inherits, logical(1), "crew_class_controller")))
+})
+
+test_that("build_slurm_controllers() applies resolved per-model resources", {
+  controllers <- build_slurm_controllers(
+    c("llama3.1", "mistral"),
+    resources = test_resources
+  )
+
+  llama_options <- controllers[["llama3.1"]]$launcher$options_cluster
+  mistral_options <- controllers[["mistral"]]$launcher$options_cluster
+
+  # Per-model override applied ...
+  expect_equal(llama_options$memory_gigabytes_per_cpu, 8)
+  # ... while an unlisted model falls back to the default block
+  expect_equal(mistral_options$memory_gigabytes_per_cpu, 4)
+  expect_equal(mistral_options$cpus_per_task, 4)
+})
+
+test_that("build_slurm_controllers() embeds the ollama pull line for each model", {
+  controllers <- build_slurm_controllers(
+    c("llama3.1", "mistral"),
+    resources = test_resources
+  )
+
+  expect_true(any(grepl(
+    "ollama pull llama3.1",
+    controllers[["llama3.1"]]$launcher$options_cluster$script_lines
+  )))
+  expect_true(any(grepl(
+    "ollama pull mistral",
+    controllers[["mistral"]]$launcher$options_cluster$script_lines
+  )))
+})
+
+test_that("sanitise_target_name() collapses characters invalid in target names", {
+  expect_equal(sanitise_target_name("llama3.2:1b"), "llama3.2_1b")
+})
+
+test_that("build_grid_targets() creates a grid/scored target pair per model", {
+  targets::tar_dir({
+    targets::tar_script({
+      list(
+        targets::tar_target(run_id, "fake-run"),
+        build_grid_targets(
+          models = c("fake-model-a", "fake-model-b"),
+          research_questions = "sentiment",
+          context_variants = "no_context",
+          granularities = "sentence",
+          include_headlines = TRUE
+        )
+      )
+    }, ask = FALSE)
+
+    manifest <- targets::tar_manifest(callr_function = NULL)
+
+    expect_setequal(
+      manifest$name,
+      c(
+        "run_id",
+        "grid_fake_model_a", "scored_fake_model_a",
+        "grid_fake_model_b", "scored_fake_model_b"
+      )
+    )
+  })
+})
+
+test_that("build_grid_targets() branches scored_<model> over grid_<model>", {
+  targets::tar_dir({
+    targets::tar_script({
+      list(
+        targets::tar_target(run_id, "fake-run"),
+        build_grid_targets(
+          models = "fake-model",
+          research_questions = "sentiment",
+          context_variants = "no_context",
+          granularities = "sentence",
+          include_headlines = TRUE
+        )
+      )
+    }, ask = FALSE)
+
+    manifest <- targets::tar_manifest(
+      fields = tidyselect::any_of(c("name", "command", "pattern")),
+      callr_function = NULL
+    )
+    scored <- manifest[manifest$name == "scored_fake_model", ]
+    grid <- manifest[manifest$name == "grid_fake_model", ]
+
+    expect_equal(scored$pattern, "map(grid_fake_model)")
+    # Dispatches via rq_schema_for() on the grid row's research_question ...
+    expect_true(grepl("rq_schema_for(grid_fake_model$research_question)", scored$command, fixed = TRUE))
+    # ... and the grid row builds output paths nested under run_id
+    expect_true(grepl("results", grid$command, fixed = TRUE))
+    expect_true(grepl("run_id", grid$command, fixed = TRUE))
+  })
+})
+
+test_that("build_grid_targets() nests output under a custom results_dir", {
+  targets::tar_dir({
+    targets::tar_script({
+      list(
+        targets::tar_target(run_id, "fake-run"),
+        build_grid_targets(
+          models = "fake-model",
+          research_questions = "sentiment",
+          context_variants = "no_context",
+          granularities = "sentence",
+          include_headlines = TRUE,
+          results_dir = "test-results"
+        )
+      )
+    }, ask = FALSE)
+
+    manifest <- targets::tar_manifest(
+      fields = tidyselect::any_of(c("name", "command")),
+      callr_function = NULL
+    )
+    grid <- manifest[manifest$name == "grid_fake_model", ]
+
+    expect_true(grepl("test-results", grid$command, fixed = TRUE))
+  })
+})

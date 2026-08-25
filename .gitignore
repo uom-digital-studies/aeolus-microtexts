@@ -17,5 +17,9 @@ skills-lock.json
 /doc/
 /Meta/
 
+# HPC smoke test (docs/hpc-smoke-test.md, _test_targets.R) artifacts
+/_test_targets_store/
+/test-results/
+
 # OS cruft
 .DS_Store

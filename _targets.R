@@ -1,57 +1,37 @@
-# Created by use_targets().
-# Follow the comments below to fill in this target script.
-# Then follow the manual to check and run the pipeline:
-#   https://books.ropensci.org/targets/walkthrough.html#inspect-the-pipeline
+# targets + crew.cluster SLURM pipeline (ADR 0001). One crew.cluster SLURM
+# controller/worker group per model (each starting `ollama serve` once and
+# reusing it across that model's research-question x context-variant x
+# granularity x include_headlines cells), combined into a controller group.
+#
+# Controller and target construction live in
+# `R/pipeline-orchestration.R`'s `build_slurm_controllers()` /
+# `build_grid_targets()` (shared with `_test_targets.R`'s smaller smoke-test
+# grid, see docs/hpc-smoke-test.md) — this file just supplies the real
+# model list and grid parameters.
+#
+# Package loading (ADR 0004): aeolusmicrotexts must be **installed**
+# (`scripts/run-sweep.sh` runs `renv::install(".")` before `tar_make()`),
+# not loaded via `devtools::load_all()` — this file calls its exported
+# functions unqualified (per AGENTS.md), which requires the library() call
+# below in addition to `packages=`/`imports=` in tar_option_set() (that
+# option only governs how *target commands* are evaluated, not how this
+# script itself builds the pipeline).
 
-# Load packages required to define the pipeline:
 library(targets)
+library(aeolusmicrotexts)
 
-# Set target options:
 tar_option_set(
-  packages = c("aeolusmicrotexts") # Packages that your targets need for their tasks.
-  # format = "qs", # Optionally set the default storage format. qs is fast.
-  #
-  # Pipelines that take a long time to run may benefit from
-  # optional distributed computing. To use this capability
-  # in tar_make(), supply a {crew} controller
-  # as discussed at https://books.ropensci.org/targets/crew.html.
-  # Choose a controller that suits your needs. For example, the following
-  # sets a controller that scales up to a maximum of two workers
-  # which run as local R processes. Each worker launches when there is work
-  # to do and exits if 60 seconds pass with no tasks to run.
-  #
-  #   controller = crew::crew_controller_local(workers = 2, seconds_idle = 60)
-  #
-  # Alternatively, if you want workers to run on a high-performance computing
-  # cluster, select a controller from the {crew.cluster} package.
-  # For the cloud, see plugin packages like {crew.aws.batch}.
-  # The following example is a controller for Sun Grid Engine (SGE).
-  #
-  #   controller = crew.cluster::crew_controller_sge(
-  #     # Number of workers that the pipeline can scale up to:
-  #     workers = 10,
-  #     # It is recommended to set an idle time so workers can shut themselves
-  #     # down if they are not running tasks.
-  #     seconds_idle = 120,
-  #     # Many clusters install R as an environment module, and you can load it
-  #     # with the script_lines argument. To select a specific verison of R,
-  #     # you may need to include a version string, e.g. "module load R/4.3.2".
-  #     # Check with your system administrator if you are unsure.
-  #     script_lines = "module load R"
-  #   )
-  #
-  # Set other options as needed.
+  packages = "aeolusmicrotexts",
+  imports = "aeolusmicrotexts"
 )
 
-# Replace the target list below with your own:
+models <- read_models()
+
+tar_option_set(
+  controller = rlang::exec(crew::crew_controller_group, !!!build_slurm_controllers(models))
+)
+
 list(
-  tar_target(
-    name = data,
-    command = tibble(x = rnorm(100), y = rnorm(100))
-    # format = "qs" # Efficient storage for general data objects.
-  ),
-  tar_target(
-    name = model,
-    command = coefficients(lm(y ~ x, data = data))
-  )
+  tar_target(run_id, generate_run_id()),
+  build_grid_targets(models)
 )
