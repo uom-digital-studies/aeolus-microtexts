@@ -58,6 +58,15 @@ test_that("build_analysis_grid() respects a custom output_dir", {
 test_that("generate_run_id() embeds the given version and timestamp", {
   when <- as.POSIXct("2026-08-21 15:30:00", tz = "UTC")
   run_id <- generate_run_id(version = "0.1.0.9000", when = when)
+  grid <- build_analysis_grid(
+    models = "llama3.1",
+    research_questions = "sentiment",
+    context_variants = "no_context",
+    granularities = "sentence",
+    include_headlines = TRUE,
+    output_dir = file.path("results", run_id)
+  )
 
   expect_equal(run_id, "20260821-153000_v0.1.0.9000")
+  expect_true(all(startsWith(grid$output, file.path("results", run_id))))
 })
