@@ -34,7 +34,7 @@ list(
     test_models$model,
     research_questions = "sentiment",
     context_variants = "no_context",
-    granularities = "sentence",
+    granularities = "microtext",
     include_headlines = TRUE,
     results_dir = "test-results"
   )
