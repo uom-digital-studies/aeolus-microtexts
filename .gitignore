@@ -8,6 +8,8 @@
 .agents
 skills-lock.json
 
+.env
+
 # R package build/check artifacts
 *.Rcheck/
 *.tar.gz
