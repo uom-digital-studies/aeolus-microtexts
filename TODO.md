@@ -4,6 +4,7 @@
 [x] Implement `granularity`/`include_headline` branching in `load_aeolus()`/`tokenise_microtexts_by_sentence()` (currently always sentence-tokenises with headlines retained)
 [x] Update `run_pipeline_with_schema()` to emit the results-CSV schema in `docs/adr/0003-results-csv-schema.md` (self-describing columns incl. `research_question`, raw `model`, `context_variant`, `granularity`, `include_headline`, `microtext`, `unit_index`, `unit_of_analysis`, `label`, `score`)
 [x] Build `_targets.R` + `slurm-resources.yml` (root-level, per ADR 0001), TDD-ing `R/pipeline-grid.R`/`R/slurm-resources.R`
+[ ] Handle environment variables properly: make sure that they are forwarded/instantiated on the server
 [ ] Run the real-HPC smoke test per `docs/hpc-smoke-test.md` (`_test_targets.R` via `scripts/test-run.sh`), before trusting the pipeline for a real sweep
 [ ] Confirm `mistral` (in `models.yml`) is actually available — it's absent from the central Ollama model store listed in `ollama/2025README.md`; either pull it into `OLLAMA_MODELS_DIR` (needs compute-node internet access, unconfirmed) or swap it for a model already in the central store
 [ ] Choose the right SLURM partition for the real sweep — `slurm-resources.yml`'s `gpu-a100-short` default is only good for the ~30 min smoke test

@@ -35,9 +35,8 @@ new_rq_schema <- function(name, type) {
 #' Context variant framings
 #'
 #' The three fixed framings prepended to a schema's task instruction (see
-#' CONTEXT.md). Crossing these against research questions/models is future
-#' sweep work (not yet built); today's callers use the default,
-#' `"no_context"`.
+#' CONTEXT.md). These are crossed against research questions and models
+#' in [build_analysis_grid()].
 #'
 #' @param context_variant One of `"no_context"`, `"ulysses_context"`,
 #'   `"media_text_context"`
@@ -105,9 +104,9 @@ analyse_with_schema <- function(aeolus_tbl,
     units,
     function(one_unit) {
       # Clone so each call starts from a fresh (stateless) conversation
-      chat$clone()$chat_structured(one_unit, type = schema$type)
-    },
-    .progress = "Analysing units of analysis"
+      # Temperature is 0 so results are completely reproducible
+      chat$clone()$chat_structured(one_unit, type = schema$type, temperature = 0)
+    }
   )
 
   aeolus_tbl |>
@@ -122,7 +121,7 @@ analyse_with_schema <- function(aeolus_tbl,
 #' tokenise, score, write
 #'
 #' The reusable unit called by each RQ's `run_*_pipeline()` wrapper, and, in
-#' turn, by the `ollama-*-analysis.R` CLI scripts.
+#' turn, `_targets.R`.
 #'
 #' @param model Name of the Ollama model to use
 #' @param output Path to write the scored results CSV to. Parent
