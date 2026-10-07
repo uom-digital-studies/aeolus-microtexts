@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# Drives the automatable steps of the real-HPC smoke test
-# (docs/hpc-smoke-test.md): push the repo to the cluster directly from
+# Drives the automatable steps of the real-HPC smoke test: push the repo
+# to the cluster directly from
 # this laptop (the HPC never talks to GitHub; it's just a `git push`
 # target, kept in sync via a bare repo + post-receive hook), (re)install
 # aeolusmicrotexts there (ADR 0004), then submit `_test_targets.R`'s
 # single-model/single-cell grid via `crew.cluster` and block until it
 # finishes. `_test_targets.R` writes to its own `test-results/` dir and
 # `_test_targets_store` store, so this never touches the real pipeline's
-# `_targets/` store or `results/` output (docs/hpc-smoke-test.md, step 3-4).
+# `_targets/` store or `results/` output (the install + submit steps below).
 #
 # IMPORTANT: `git push` only sends *committed* changes. Commit (or at
 # least `git add` + commit) local edits before running this script, or
 # the HPC will build against stale code.
 #
 # What this script does NOT do, because they're genuinely manual/
-# interactive (see docs/hpc-smoke-test.md for the full steps): watching
+# interactive: watching
 # `squeue`/worker logs while the job runs, inspecting the output CSV
 # against the schema in docs/adr/0003-results-csv-schema.md, and cleaning
 # up test-results/_test_targets_store afterwards. Reminders for those are
@@ -55,11 +55,23 @@ fi
 echo "==> Pushing ${BRANCH} to ${HOST}:${BARE_DIR}"
 git push hpc "${BRANCH}"
 
+echo "==> Uploading .Renviron to ${HOST}:${REMOTE_DIR} (git push never carries it; it's gitignored)"
+[ -f .Renviron ] || { echo ".Renviron not found in repo root - see docs/environment-variables.md" >&2; exit 1; }
+scp .Renviron "${HOST}:${REMOTE_DIR}/.Renviron"
+
 echo "==> Installing aeolusmicrotexts on ${HOST} (ADR 0004: formally installed, not load_all())"
-ssh "$HOST" "cd ${REMOTE_DIR} && Rscript -e 'renv::restore(); renv::install(\".\")'"
+# exclude = "Matrix": renv::restore() always tries to materialize every
+# lockfile entry into the project's private library, even recommended
+# packages like Matrix that ship with R itself - RENV_CONFIG_EXTERNAL_LIBRARIES
+# only widens .libPaths() for *loading* already-resolved packages, it doesn't
+# change restore()'s install-vs-skip decision, so it never actually prevented
+# the rebuild. Excluding Matrix from restore() skips that rebuild entirely and
+# lets R's own bundled copy (1.5-1, matching renv.lock, alongside R 4.2.2)
+# satisfy it via the default library. See docs/environment-variables.md.
+ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'renv::restore(exclude = \"Matrix\"); renv::install(\".\")'"
 
 echo "==> Validating _test_targets.R before submitting"
-ssh "$HOST" "cd ${REMOTE_DIR} && Rscript -e 'targets::tar_manifest(script = \"_test_targets.R\", store = \"_test_targets_store\")'"
+ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'targets::tar_manifest(script = \"_test_targets.R\", store = \"_test_targets_store\")'"
 
 cat <<EOF
 
@@ -70,11 +82,11 @@ cat <<EOF
 EOF
 
 echo "==> Submitting _test_targets.R (blocks until the pipeline finishes)"
-ssh "$HOST" "cd ${REMOTE_DIR} && Rscript -e 'targets::tar_make(script = \"_test_targets.R\", store = \"_test_targets_store\")'"
+ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'targets::tar_make(script = \"_test_targets.R\", store = \"_test_targets_store\")'"
 
 cat <<EOF
 
-==> Done. Remaining manual steps (docs/hpc-smoke-test.md, steps 5-6):
+==> Done. Remaining manual steps:
       - Confirm the output:
           ssh ${HOST} 'cat ${REMOTE_DIR}/test-results/*.csv'
         and check it matches the schema in docs/adr/0003-results-csv-schema.md.

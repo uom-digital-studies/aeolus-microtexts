@@ -1,4 +1,4 @@
-# Real-HPC smoke-test pipeline (docs/hpc-smoke-test.md). A trimmed sibling
+# Real-HPC smoke-test pipeline, driven by `scripts/test-run.sh`. A trimmed sibling
 # of `_targets.R`: same `build_slurm_controllers()`/`build_grid_targets()`
 # builders (R/pipeline-orchestration.R), but a single small model and a
 # single grid cell, and its own store/results dir so it never touches the
@@ -10,9 +10,8 @@
 # smoke test needs no pull — chosen for that reason, not because it's small
 # (it needs the `llama3.1:70b` override in `slurm-resources.yml`). Declared
 # inline rather than read from `models.yml` since it's smoke-test-only. See
-# docs/hpc-smoke-test.md for the rest of the manual validation steps
-# (syncing the repo, installing the package, watching SLURM/logs, checking
-# output) that this script doesn't automate.
+# `scripts/test-run.sh`'s header comment for the manual validation steps
+# (watching SLURM/logs, checking output) that script doesn't automate.
 
 library(targets)
 library(aeolusmicrotexts)

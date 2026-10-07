@@ -6,7 +6,7 @@
 # Controller and target construction live in
 # `R/pipeline-orchestration.R`'s `build_slurm_controllers()` /
 # `build_grid_targets()` (shared with `_test_targets.R`'s smaller smoke-test
-# grid, see docs/hpc-smoke-test.md) — this file just supplies the real
+# grid, driven by `scripts/test-run.sh`) — this file just supplies the real
 # model list and grid parameters.
 #
 # Package loading (ADR 0004): aeolusmicrotexts must be **installed**
