@@ -60,15 +60,16 @@ echo "==> Uploading .Renviron to ${HOST}:${REMOTE_DIR} (git push never carries i
 scp .Renviron "${HOST}:${REMOTE_DIR}/.Renviron"
 
 echo "==> Installing aeolusmicrotexts on ${HOST} (ADR 0004: formally installed, not load_all())"
-# exclude = "Matrix": renv::restore() always tries to materialize every
-# lockfile entry into the project's private library, even recommended
-# packages like Matrix that ship with R itself - RENV_CONFIG_EXTERNAL_LIBRARIES
-# only widens .libPaths() for *loading* already-resolved packages, it doesn't
-# change restore()'s install-vs-skip decision, so it never actually prevented
-# the rebuild. Excluding Matrix from restore() skips that rebuild entirely and
-# lets R's own bundled copy (1.5-1, matching renv.lock, alongside R 4.2.2)
-# satisfy it via the default library. See docs/environment-variables.md.
-ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'renv::restore(exclude = \"Matrix\"); renv::install(\".\")'"
+# RENV_RESTORE_EXCLUDE (set in .env, defaulted here): any package whose
+# compiled code links against R's own BLAS/LAPACK (libRblas.so/libRlapack.so)
+# fails to rebuild from source on spartan's foss/2022a EasyBuild toolchain -
+# renv's install-test subprocess can't find those .so files (known upstream
+# issue, rstudio/renv#1684). Rather than fix this generally, we just exclude
+# packages one-by-one as they come up (Matrix first, then slam) and fall back
+# to whatever copy is already on the default library path. See
+# docs/environment-variables.md.
+RENV_RESTORE_EXCLUDE="${RENV_RESTORE_EXCLUDE:-c(\"Matrix\", \"slam\")}"
+ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'renv::restore(exclude = ${RENV_RESTORE_EXCLUDE}); renv::install(\".\")'"
 
 echo "==> Validating _test_targets.R before submitting"
 ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'targets::tar_manifest(script = \"_test_targets.R\", store = \"_test_targets_store\")'"
