@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 # Drives the automatable steps of the real-HPC smoke test
-# (docs/hpc-smoke-test.md): sync the repo to the cluster, (re)install
+# (docs/hpc-smoke-test.md): push the repo to the cluster directly from
+# this laptop (the HPC never talks to GitHub; it's just a `git push`
+# target, kept in sync via a bare repo + post-receive hook), (re)install
 # aeolusmicrotexts there (ADR 0004), then submit `_test_targets.R`'s
 # single-model/single-cell grid via `crew.cluster` and block until it
 # finishes. `_test_targets.R` writes to its own `test-results/` dir and
 # `_test_targets_store` store, so this never touches the real pipeline's
 # `_targets/` store or `results/` output (docs/hpc-smoke-test.md, step 3-4).
+#
+# IMPORTANT: `git push` only sends *committed* changes. Commit (or at
+# least `git add` + commit) local edits before running this script, or
+# the HPC will build against stale code.
 #
 # What this script does NOT do, because they're genuinely manual/
 # interactive (see docs/hpc-smoke-test.md for the full steps): watching
@@ -19,13 +25,35 @@
 # root.
 set -euo pipefail
 
+source .env
+
 HOST="${SPARTAN_HOST:-spartan}"
 REMOTE_DIR="${SPARTAN_REMOTE_DIR:-~/aeolus-microtexts}"
-REPO_URL="$(git config --get remote.origin.url)"
+BARE_DIR="${SPARTAN_GIT_DIR:-~/aeolus-microtexts.git}"
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
-echo "==> Syncing repo to ${HOST}:${REMOTE_DIR}"
-ssh "$HOST" "git -C ${REMOTE_DIR} pull" \
-  || ssh "$HOST" "git clone ${REPO_URL} ${REMOTE_DIR}"
+echo "==> Ensuring bare repo exists on ${HOST}:${BARE_DIR}"
+ssh "$HOST" "mkdir -p ${BARE_DIR} && git init --bare -q ${BARE_DIR} && mkdir -p ${REMOTE_DIR}"
+
+echo "==> Installing post-receive hook (checks out the pushed branch into ${REMOTE_DIR})"
+ssh "$HOST" "cat > ${BARE_DIR}/hooks/post-receive && chmod +x ${BARE_DIR}/hooks/post-receive" <<HOOK
+#!/bin/sh
+set -eu
+while read -r oldrev newrev refname; do
+  branch=\$(echo "\$refname" | sed 's#refs/heads/##')
+  git --git-dir="${BARE_DIR}" --work-tree="${REMOTE_DIR}" checkout -f "\$branch"
+done
+HOOK
+
+echo "==> Pointing local git remote 'hpc' at ${HOST}:${BARE_DIR}"
+if git remote get-url hpc >/dev/null 2>&1; then
+  git remote set-url hpc "${HOST}:${BARE_DIR}"
+else
+  git remote add hpc "${HOST}:${BARE_DIR}"
+fi
+
+echo "==> Pushing ${BRANCH} to ${HOST}:${BARE_DIR}"
+git push hpc "${BRANCH}"
 
 echo "==> Installing aeolusmicrotexts on ${HOST} (ADR 0004: formally installed, not load_all())"
 ssh "$HOST" "cd ${REMOTE_DIR} && Rscript -e 'renv::restore(); renv::install(\".\")'"
