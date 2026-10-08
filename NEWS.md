@@ -1,4 +1,4 @@
-# aeolusmicrotexts (development version)
+# aeolusmicrotexts 0.1.1
 
 * `build_slurm_controllers()` now captures each SLURM worker's stdout/stderr to `crew-logs/<model>_<job id>.log` instead of letting `crew.cluster` discard it to `/dev/null`, so a stalled or vanished worker job can actually be diagnosed.
 * Completed data pipeline to implement key elements of ADR 0003. The `unit_of_analysis` and `include_headlines` conditions can now be elegantly crossed when the data is constituted for a run.
