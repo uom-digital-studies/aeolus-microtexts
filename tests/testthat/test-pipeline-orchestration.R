@@ -98,11 +98,26 @@ test_that("build_slurm_controllers() embeds the GPU request, module loads, and O
   expect_true(any(grepl("^module load GCCcore/", lines)))
   expect_true(any(grepl("^module load ollama/", lines)))
   expect_true(any(grepl("^module load foss/.* R/", lines)))
-  expect_true(any(grepl("^run_ollama_server &$", lines)))
+  expect_true(any(grepl("^run_ollama_server > ollama-server.log 2>&1 &$", lines)))
   expect_true(any(grepl(
     paste0("^export OLLAMA_MODELS=", test_central_models_dir, "$"),
     lines
   )))
+})
+
+test_that("build_slurm_controllers() discovers the server's randomised port rather than assuming 11434", {
+  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
+  controllers <- build_slurm_controllers(
+    tibble::tibble(model = "llama3.1", source = "central"),
+    resources = test_resources
+  )
+
+  lines <- controllers[["llama3.1"]]$launcher$options_cluster$script_lines
+
+  expect_true(any(grepl("OLLAMA_HOST=\\$\\(grep", lines)))
+  expect_true(any(grepl("^export OLLAMA_BASE_URL=http://\\$\\{OLLAMA_HOST\\}$", lines)))
+  expect_true(any(grepl("curl -sf http://\\$\\{OLLAMA_HOST\\}/", lines)))
+  expect_false(any(grepl("11434", lines)))
 })
 
 test_that("build_slurm_controllers() points project-sourced models at the project pull-cache", {

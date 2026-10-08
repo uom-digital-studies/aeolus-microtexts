@@ -77,7 +77,30 @@ cat <<EOF
 EOF
 
 echo "==> Submitting _test_targets.R (blocks until the pipeline finishes)"
-ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'targets::tar_make(script = \"_test_targets.R\", store = \"_test_targets_store\")'"
+# Plain `ssh host "cmd"` doesn't forward local Ctrl-C/kill to the remote
+# process, so an interrupted local run leaves Rscript (and its process
+# lock on _test_targets_store) running orphaned on the cluster. `-t`
+# allocates a pty so a dropped connection is more likely to SIGHUP the
+# remote side, and `exec` replaces the remote shell with Rscript so that
+# signal lands on Rscript directly. The trap below is the deterministic
+# fallback: on local interrupt, it reconnects and pkills the remote
+# Rscript by matching the store name (specific enough not to hit
+# unrelated jobs).
+interrupt_remote_run() {
+  trap - INT TERM HUP
+  echo ""
+  echo "==> Local interrupt caught; terminating remote Rscript on ${HOST}"
+  kill "$SSH_PID" 2>/dev/null || true
+  ssh "$HOST" "pkill -u \$USER -f '_test_targets_store'" || true
+  wait "$SSH_PID" 2>/dev/null || true
+  exit 130
+}
+trap interrupt_remote_run INT TERM HUP
+
+ssh -t "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && exec Rscript -e 'targets::tar_make(script = \"_test_targets.R\", store = \"_test_targets_store\")'" &
+SSH_PID=$!
+wait "$SSH_PID"
+trap - INT TERM HUP
 
 cat <<EOF
 

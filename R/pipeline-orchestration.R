@@ -38,6 +38,18 @@ default_ollama_project_models_dir <- function(start = ".") {
 #' background, waits for it to respond, then pulls the model once so every
 #' task the worker runs afterwards reuses the same warm server/model.
 #'
+#' Unlike a plain `ollama serve`, Spartan's `run_ollama_server` binds to a
+#' *random* port each time (it shares GPU nodes across users, so port 11434
+#' can't be assumed free) and only reports the chosen `host:port` in its own
+#' stdout, e.g. `OLLAMA_HOST=spartan-gpgpu126:34267 ollama <CMD>`. So this
+#' redirects that stdout to a log file, polls it until the `OLLAMA_HOST=...`
+#' line appears, and exports it — plus `OLLAMA_BASE_URL` (the env var
+#' `ellmer::chat_ollama()` actually reads, in `http://host:port` form) —
+#' before probing readiness or pulling, so every later command in the job
+#' (the readiness curl, `ollama pull`, and the R worker process itself) talks
+#' to the right port instead of silently falling back to the unused default
+#' of 11434.
+#'
 #' The leading `#SBATCH --gres=gpu:1` line requests a GPU.
 #' `crew.cluster::crew_options_slurm()` has no dedicated `gres` argument,
 #' but `sbatch` keeps scanning for `#SBATCH` directives up to the first
@@ -64,8 +76,11 @@ ollama_worker_script_lines <- function(model, source) {
     "module load ollama/0.9.1-CUDA-12.5.1",
     "module load foss/2022a R/4.2.2",
     paste0("export OLLAMA_MODELS=", ollama_models_dir),
-    "run_ollama_server &",
-    "for i in $(seq 1 30); do curl -sf http://127.0.0.1:11434/ && break; sleep 2; done",
+    "run_ollama_server > ollama-server.log 2>&1 &",
+    "for i in $(seq 1 30); do grep -q 'OLLAMA_HOST=' ollama-server.log && break; sleep 2; done",
+    "export OLLAMA_HOST=$(grep -oE 'OLLAMA_HOST=\\S+' ollama-server.log | head -1 | cut -d= -f2)",
+    "export OLLAMA_BASE_URL=http://${OLLAMA_HOST}",
+    "for i in $(seq 1 30); do curl -sf http://${OLLAMA_HOST}/ && break; sleep 2; done",
     paste("ollama pull", model)
   )
 }
