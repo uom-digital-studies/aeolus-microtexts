@@ -22,13 +22,13 @@ Known variables:
 - Inherently host-specific: it can't be a single repo-tracked file, because the laptop and the HPC need different values (different filesystem layouts, different toolchains). Each machine that runs R for this project manages its own `~/.Renviron`.
 - Holds R-level config, not orchestration config.
 - Gitignored, so `git push` never carries it to spartan. `scripts/test-run.sh` works around this by `scp`-ing the laptop's repo-root `.Renviron` to `${REMOTE_DIR}/.Renviron` right after the push, and fails fast (before pushing anything stale through) if no local `.Renviron` exists.
-- **Precedence caveat:** per `?Startup`, R checks for `.Renviron` in the process's *current working directory* first, and only falls back to `~/.Renviron` if none is found there — whichever one is found is used in full, not merged with the other. Every `Rscript` call in `scripts/test-run.sh` (`tar_manifest()`, `tar_make()`) runs with `cd ${REMOTE_DIR}` first, so once the upload step has placed `.Renviron` in `${REMOTE_DIR}`, **it shadows spartan's `~/.Renviron` for all of them** — `~/.Renviron` is never consulted by any R process `test-run.sh` starts.
+- **Precedence caveat:** per `?Startup`, R checks for `.Renviron` in the process's *current working directory* first, and only falls back to `~/.Renviron` if none is found there — whichever one is found is used in full, not merged with the other. Every `Rscript` call in `scripts/test-run.sh` (`tar_manifest()`, `tar_make()`) runs with `cd ${REMOTE_DIR}` first, so once the upload step has placed `.Renviron` in `${REMOTE_DIR}`, **it shadows spartan's `~/.Renviron` for all of them** — `~/.Renviron` is never consulted by any R process `test-run.sh` starts. Because of this, `scripts/test-run.sh` does **not** rely on `.Renviron` to carry `R_LIBS_USER` — see below.
 
-Known variables (HPC-only, set in the HPC's `~/.Renviron`):
+Known variables (HPC-only):
 
 | Variable | Purpose |
 | --- | --- |
-| `R_LIBS_USER` | Path to a user-writable personal library (e.g. `~/R/library`). Required on spartan because the module-provided R library is shared/read-only; `pak::pkg_install(".")` needs a writable destination. Not needed on a laptop, which has a default personal library. Set before any install/package-load operation. |
+| `R_LIBS_USER` | Path to a user-writable personal library (e.g. `~/R/library`). Required on spartan because the module-provided R library is shared/read-only; `pak::pkg_install(".")` and `targets::tar_make()` need a writable destination/library. Not needed on a laptop, which has a default personal library. Rather than depending on `.Renviron` (fragile, per the precedence caveat above — the repo's `.Renviron` would need to duplicate it, and any run without a matching local value silently drops it), `scripts/test-run.sh` sets `R_LIBS_USER=~/R/library` inline on every remote `Rscript` invocation (install, `tar_manifest()`, `tar_make()`), so it can't go stale independently of `.Renviron`'s contents. |
 
 ## Adding a new variable
 

@@ -66,7 +66,7 @@ echo "==> Installing aeolusmicrotexts on ${HOST} (ADR 0004: formally installed, 
 ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && R_LIBS_USER=~/R/library Rscript -e 'if (!requireNamespace(\"pak\", quietly = TRUE)) install.packages(\"pak\", repos = sprintf(\"https://r-lib.github.io/p/pak/stable/%s/%s/%s\", .Platform\$pkgType, R.Version()\$os, R.Version()\$arch)); pak::pkg_install(\".\")'"
 
 echo "==> Validating _test_targets.R before submitting"
-ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'targets::tar_manifest(script = \"_test_targets.R\", store = \"_test_targets_store\")'"
+ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && R_LIBS_USER=~/R/library Rscript -e 'targets::tar_manifest(script = \"_test_targets.R\", store = \"_test_targets_store\")'"
 
 cat <<EOF
 
@@ -77,7 +77,7 @@ cat <<EOF
 EOF
 
 echo "==> Submitting _test_targets.R (blocks until the pipeline finishes)"
-ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'targets::tar_make(script = \"_test_targets.R\", store = \"_test_targets_store\")'"
+ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && R_LIBS_USER=~/R/library Rscript -e 'targets::tar_make(script = \"_test_targets.R\", store = \"_test_targets_store\")'"
 
 cat <<EOF
 
