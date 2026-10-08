@@ -1,3 +1,5 @@
+# aeolusmicrotexts (development version)
+
 # aeolusmicrotexts 0.1.1
 
 * `build_slurm_controllers()` now captures each SLURM worker's stdout/stderr to `crew-logs/<model>_<job id>.log` instead of letting `crew.cluster` discard it to `/dev/null`, so a stalled or vanished worker job can actually be diagnosed.
