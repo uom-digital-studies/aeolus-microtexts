@@ -4,6 +4,7 @@
 .RData
 .Ruserdata
 .Renviron
+.Renviron-hpc
 .httr-oauth
 .posit/assistant
 .agents
@@ -23,6 +24,9 @@ skills-lock.json
 # HPC smoke test (docs/hpc-smoke-test.md, _test_targets.R) artifacts
 /_test_targets_store/
 /test-results/
+
+# crew.cluster SLURM worker logs (R/pipeline-orchestration.R, build_slurm_controllers())
+/crew-logs/
 
 # OS cruft
 .DS_Store

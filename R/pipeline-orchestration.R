@@ -131,6 +131,14 @@ sanitise_target_name <- function(model) {
 #' `crew::crew_controller_group()` and pass to
 #' `tar_option_set(controller = ...)`.
 #'
+#' Each worker's SLURM stdout/stderr is captured to
+#' `crew-logs/<sanitised model>_<job id>.log` (relative to the working
+#' directory `targets::tar_make()` is run from) — `crew.cluster` defaults
+#' this to `/dev/null` otherwise, which silently discards module-load,
+#' Ollama startup/pull, and worker errors. The `crew-logs/` directory is
+#' created here (not left to SLURM) because a missing `--output` directory
+#' makes `sbatch` fail the job immediately.
+#'
 #' @param models A tibble as returned by [read_models()], with `model` and
 #'   `source` columns — `source` determines which directory
 #'   [ollama_worker_script_lines()] points `OLLAMA_MODELS` at for that
@@ -144,14 +152,23 @@ sanitise_target_name <- function(model) {
 #'   named for its model
 #' @export
 build_slurm_controllers <- function(models, resources = read_slurm_resources()) {
+  dir.create("crew-logs", showWarnings = FALSE)
   controllers <- purrr::pmap(models, function(model, source) {
     model_resources <- resolve_slurm_resources(model, resources = resources)
+    slug <- sanitise_target_name(model)
     crew.cluster::crew_controller_slurm(
       name = model,
       workers = 1,
       options_cluster = rlang::exec(
         crew.cluster::crew_options_slurm,
         script_lines = ollama_worker_script_lines(model, source),
+        # Defaults to /dev/null, which silently discards worker
+        # stdout/stderr (module loads, ollama startup, ollama pull,
+        # mirai worker errors) - the opposite of what you want while
+        # debugging a stalled/vanished job. One file per worker job,
+        # %A = SLURM job ID.
+        log_output = file.path("crew-logs", paste0(slug, "_%A.log")),
+        log_error = file.path("crew-logs", paste0(slug, "_%A.log")),
         !!!model_resources
       )
     )

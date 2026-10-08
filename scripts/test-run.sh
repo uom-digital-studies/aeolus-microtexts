@@ -55,18 +55,18 @@ fi
 echo "==> Pushing ${BRANCH} to ${HOST}:${BARE_DIR}"
 git push hpc "${BRANCH}"
 
-echo "==> Uploading .Renviron to ${HOST}:${REMOTE_DIR} (git push never carries it; it's gitignored)"
-[ -f .Renviron ] || { echo ".Renviron not found in repo root - see docs/environment-variables.md" >&2; exit 1; }
-scp .Renviron "${HOST}:${REMOTE_DIR}/.Renviron"
+echo "==> Uploading .Renviron-hpc to ${HOST}:${REMOTE_DIR} (git push never carries it; it's gitignored)"
+[ -f .Renviron-hpc ] || { echo ".Renviron-hpc not found in repo root - see docs/environment-variables.md" >&2; exit 1; }
+scp .Renviron-hpc "${HOST}:${REMOTE_DIR}/.Renviron"
 
-echo "==> Creating personal library on ${HOST} (ADR 0005: no renv, install straight from DESCRIPTION)"
+echo "==> Creating personal library on ${HOST} (ADR 0005: no renv, install straight from DESCRIPTION; path must match .Renviron-hpc's R_LIBS_USER)"
 ssh "$HOST" "mkdir -p ~/R/library"
 
 echo "==> Installing aeolusmicrotexts on ${HOST} (ADR 0004: formally installed, not load_all())"
-ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && R_LIBS_USER=~/R/library Rscript -e 'if (!requireNamespace(\"pak\", quietly = TRUE)) install.packages(\"pak\", repos = sprintf(\"https://r-lib.github.io/p/pak/stable/%s/%s/%s\", .Platform\$pkgType, R.Version()\$os, R.Version()\$arch)); pak::pkg_install(\".\")'"
+ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'if (!requireNamespace(\"pak\", quietly = TRUE)) install.packages(\"pak\", repos = sprintf(\"https://r-lib.github.io/p/pak/stable/%s/%s/%s\", .Platform\$pkgType, R.Version()\$os, R.Version()\$arch)); pak::pkg_install(\".\")'"
 
 echo "==> Validating _test_targets.R before submitting"
-ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && R_LIBS_USER=~/R/library Rscript -e 'targets::tar_manifest(script = \"_test_targets.R\", store = \"_test_targets_store\")'"
+ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'targets::tar_manifest(script = \"_test_targets.R\")'"
 
 cat <<EOF
 
@@ -77,7 +77,7 @@ cat <<EOF
 EOF
 
 echo "==> Submitting _test_targets.R (blocks until the pipeline finishes)"
-ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && R_LIBS_USER=~/R/library Rscript -e 'targets::tar_make(script = \"_test_targets.R\", store = \"_test_targets_store\")'"
+ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'targets::tar_make(script = \"_test_targets.R\", store = \"_test_targets_store\")'"
 
 cat <<EOF
 
