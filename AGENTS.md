@@ -18,5 +18,4 @@
 # Project management
 
 - Be as concise as possible while still making sense. Sacrifice grammar for concision.
-- Remind me when appropriate to refresh `renv`
 - Outstanding work is tracked in `TODO.md`, not in `AGENTS.md`/`CONTEXT.md`

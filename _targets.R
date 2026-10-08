@@ -10,7 +10,7 @@
 # model list and grid parameters.
 #
 # Package loading (ADR 0004): aeolusmicrotexts must be **installed**
-# (`scripts/run-sweep.sh` runs `renv::install(".")` before `tar_make()`),
+# (`scripts/run-sweep.sh` runs `pak::pkg_install(".")` before `tar_make()`),
 # not loaded via `devtools::load_all()` — this file calls its exported
 # functions unqualified (per AGENTS.md), which requires the library() call
 # below in addition to `packages=`/`imports=` in tar_option_set() (that

@@ -5,5 +5,5 @@
 # repo root.
 set -euo pipefail
 
-Rscript -e 'renv::install(".", prompt = FALSE)'
+Rscript -e 'pak::pkg_install(".", ask = FALSE)'
 Rscript -e 'targets::tar_make()'

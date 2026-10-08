@@ -5,3 +5,7 @@ The `targets` pipeline (ADR 0001) needs `crew.cluster` SLURM workers to access `
 We chose to fully install `aeolusmicrotexts` (`renv::install(".")` / `R CMD INSTALL`) everywhere the pipeline runs — dev machine and the real HPC cluster — rather than `load_all()`. `tar_option_set()` sets both `packages = "aeolusmicrotexts"` (so `library()` runs before each target) and `imports = "aeolusmicrotexts"` (so `targets` hashes the installed package's function bodies for fine-grained cache invalidation, useful while the RQ schemas are still being revised). A small wrapper script reinstalls the package before every `tar_make()` so a stale install can't silently linger.
 
 The trade-off accepted: a slower dev loop (edit → reinstall → `tar_make()`, instead of edit → `tar_make()`) in exchange for reproducibility — every run's `results/<run_id>/...` output (ADR 0003; see the "Run" entry in `CONTEXT.md`) is traceable to one pinned, installable package version, which matters because promoted results feed published research. This assumes compute nodes on the real HPC cluster share a filesystem/renv library with the submission node; unconfirmed on real hardware, to be revisited if it doesn't hold (see `scripts/test-run.sh`).
+
+---
+
+**Note (ADR 0005):** As of ADR 0005, the install command changed from `renv::install(".")` to `pak::pkg_install(".")` — see that ADR for rationale (renv's HPC friction vs. LLM non-determinism). The core principle here — formally install, not `load_all()` — remains unchanged.

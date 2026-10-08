@@ -59,17 +59,11 @@ echo "==> Uploading .Renviron to ${HOST}:${REMOTE_DIR} (git push never carries i
 [ -f .Renviron ] || { echo ".Renviron not found in repo root - see docs/environment-variables.md" >&2; exit 1; }
 scp .Renviron "${HOST}:${REMOTE_DIR}/.Renviron"
 
+echo "==> Creating personal library on ${HOST} (ADR 0005: no renv, install straight from DESCRIPTION)"
+ssh "$HOST" "mkdir -p ~/R/library"
+
 echo "==> Installing aeolusmicrotexts on ${HOST} (ADR 0004: formally installed, not load_all())"
-# RENV_RESTORE_EXCLUDE (set in .env, defaulted here): any package whose
-# compiled code links against R's own BLAS/LAPACK (libRblas.so/libRlapack.so)
-# fails to rebuild from source on spartan's foss/2022a EasyBuild toolchain -
-# renv's install-test subprocess can't find those .so files (known upstream
-# issue, rstudio/renv#1684). Rather than fix this generally, we just exclude
-# packages one-by-one as they come up (Matrix first, then slam) and fall back
-# to whatever copy is already on the default library path. See
-# docs/environment-variables.md.
-RENV_RESTORE_EXCLUDE="${RENV_RESTORE_EXCLUDE:-c(\"Matrix\", \"slam\")}"
-ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'renv::restore(exclude = ${RENV_RESTORE_EXCLUDE}); renv::install(\".\")'"
+ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && R_LIBS_USER=~/R/library Rscript -e 'if (!requireNamespace(\"pak\", quietly = TRUE)) install.packages(\"pak\", repos = sprintf(\"https://r-lib.github.io/p/pak/stable/%s/%s/%s\", .Platform\$pkgType, R.Version()\$os, R.Version()\$arch)); pak::pkg_install(\".\")'"
 
 echo "==> Validating _test_targets.R before submitting"
 ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'targets::tar_manifest(script = \"_test_targets.R\", store = \"_test_targets_store\")'"

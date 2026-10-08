@@ -12,9 +12,6 @@
 ^\.posit$
 ^\.Rproj\.user$
 ^.*\.Rproj$
-^renv$
-^renv\.lock$
-^\.Rprofile$
 ^README\.Rmd$
 ^\.posit/assistant$
 ^\.agents$
