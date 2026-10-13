@@ -1,4 +1,4 @@
-# aeolusmicrotexts (development version)
+# aeolusmicrotexts 0.1.2
 
 # aeolusmicrotexts 0.1.1
 
