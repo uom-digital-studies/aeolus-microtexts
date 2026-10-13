@@ -28,6 +28,9 @@ skills-lock.json
 # crew.cluster SLURM worker logs (R/pipeline-orchestration.R, build_slurm_controllers())
 /crew-logs/
 
+# Dispatcher job SLURM logs (dispatcher.slurm, ADR 0006)
+/dispatcher-logs/
+
 # OS cruft
 .DS_Store
 

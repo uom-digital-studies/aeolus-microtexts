@@ -36,6 +36,14 @@ _Avoid_: sweep (used informally elsewhere for the same concept, but "run" is the
 A single R parameter that switches the pipeline to a reduced sweep for local/Docker validation: 5 microtexts, using only the small `llama3.2:1b` model. Controlled entirely in R, not via `targets` branching.
 _Avoid_: dev mode, dry run
 
+**Dispatcher job**:
+The single SLURM job (submitted by `scripts/test-run.sh`/`scripts/run-sweep.sh`, non-GPU, `sapphire` partition) that runs `targets::tar_make()` itself: builds the grid and coordinates workers, but does no LLM inference. Exists to get `tar_make()` off the login node (compute nodes can't dial back into a login-node-hosted `crew` socket; see `docs/adr/0001-crew-cluster-drives-slurm.md`). Submitted fire-and-forget (no `--wait`) — the submitting script returns as soon as `sbatch` accepts the job, it does not block until the run finishes.
+_Avoid_: tar_make job, controller job, orchestrator (dispatcher is the canonical term, paired with "worker" below)
+
+**Worker**:
+A `crew.cluster` SLURM job (one per model, GPU partition, per `slurm-resources.yml`) that runs `ollama serve`, pulls that model once, and then executes grid cells dispatched to it. Launched and torn down by the dispatcher job, not submitted directly by any script.
+_Avoid_: node, task runner (worker is the `crew`-native term, kept as-is here)
+
 **Chat backend**:
 An injectable argument (default `ellmer::chat_ollama`) threaded through the analysis functions, swappable for a mocked/fake implementation in fast logic tests. Exists because `ellmer` has no built-in mock/test chat provider.
 _Avoid_: LLM client, provider (backend is the pipeline-specific term)

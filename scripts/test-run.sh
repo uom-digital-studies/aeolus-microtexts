@@ -4,21 +4,23 @@
 # this laptop (the HPC never talks to GitHub; it's just a `git push`
 # target, kept in sync via a bare repo + post-receive hook), (re)install
 # aeolusmicrotexts there (ADR 0004), then submit `_test_targets.R`'s
-# single-model/single-cell grid via `crew.cluster` and block until it
-# finishes. `_test_targets.R` writes to its own `test-results/` dir and
-# `_test_targets_store` store, so this never touches the real pipeline's
-# `_targets/` store or `results/` output (the install + submit steps below).
+# single-model/single-cell grid as its own non-blocking `sbatch`
+# dispatcher job (`dispatcher.slurm`, ADR 0006) and exit - it does not
+# wait for that job to finish. `_test_targets.R` writes to its own
+# `test-results/` dir and `_test_targets_store` store, so this never
+# touches the real pipeline's `_targets/` store or `results/` output (the
+# install + submit steps below).
 #
 # IMPORTANT: `git push` only sends *committed* changes. Commit (or at
 # least `git add` + commit) local edits before running this script, or
 # the HPC will build against stale code.
 #
 # What this script does NOT do, because they're genuinely manual/
-# interactive: watching
-# `squeue`/worker logs while the job runs, inspecting the output CSV
-# against the schema in docs/adr/0003-results-csv-schema.md, and cleaning
-# up test-results/_test_targets_store afterwards. Reminders for those are
-# printed below.
+# interactive, or because the dispatcher job itself is now fire-and-
+# forget (ADR 0006): watching `squeue`/job logs while it runs, inspecting
+# the output CSV against the schema in docs/adr/0003-results-csv-schema.md,
+# cancelling the job, and cleaning up test-results/_test_targets_store
+# afterwards. Reminders for those are printed below.
 #
 # Assumes: `spartan` is aliased in `~/.ssh/config` for the HPC cluster
 # (override via the SPARTAN_HOST env var), and this is run from the repo
@@ -68,47 +70,30 @@ ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'i
 echo "==> Validating _test_targets.R before submitting"
 ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'targets::tar_manifest(script = \"_test_targets.R\")'"
 
+echo "==> Submitting dispatcher.slurm (fire-and-forget; see ADR 0006)"
+ssh "$HOST" "cd ${REMOTE_DIR} && mkdir -p dispatcher-logs"
+JOB_ID="$(ssh "$HOST" "cd ${REMOTE_DIR} && sbatch --parsable dispatcher.slurm")"
+
 cat <<EOF
 
-==> About to submit. In another terminal, you can watch:
+==> Submitted dispatcher job ${JOB_ID}. This script does not wait for it
+    to finish - everything from here is manual.
+
+    Watch it:
       ssh ${HOST} 'squeue -u \$USER'
+      ssh ${HOST} 'tail -f ${REMOTE_DIR}/dispatcher-logs/${JOB_ID}.log'
       ssh ${HOST} 'tail -f ${REMOTE_DIR}/crew-logs/*.log'
 
-EOF
+    Cancel it (and let any worker jobs it already launched run to
+    completion/timeout on their own - no automatic cleanup, ADR 0006):
+      ssh ${HOST} 'scancel ${JOB_ID}'
 
-echo "==> Submitting _test_targets.R (blocks until the pipeline finishes)"
-# Plain `ssh host "cmd"` doesn't forward local Ctrl-C/kill to the remote
-# process, so an interrupted local run leaves Rscript (and its process
-# lock on _test_targets_store) running orphaned on the cluster. `-t`
-# allocates a pty so a dropped connection is more likely to SIGHUP the
-# remote side, and `exec` replaces the remote shell with Rscript so that
-# signal lands on Rscript directly. The trap below is the deterministic
-# fallback: on local interrupt, it reconnects and pkills the remote
-# Rscript by matching the store name (specific enough not to hit
-# unrelated jobs).
-interrupt_remote_run() {
-  trap - INT TERM HUP
-  echo ""
-  echo "==> Local interrupt caught; terminating remote Rscript on ${HOST}"
-  kill "$SSH_PID" 2>/dev/null || true
-  ssh "$HOST" "pkill -u \$USER -f '_test_targets_store'" || true
-  wait "$SSH_PID" 2>/dev/null || true
-  exit 130
-}
-trap interrupt_remote_run INT TERM HUP
-
-ssh -t "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && exec Rscript -e 'targets::tar_make(script = \"_test_targets.R\", store = \"_test_targets_store\")'" &
-SSH_PID=$!
-wait "$SSH_PID"
-trap - INT TERM HUP
-
-cat <<EOF
-
-==> Done. Remaining manual steps:
+    Once it finishes:
       - Confirm the output:
           ssh ${HOST} 'cat ${REMOTE_DIR}/test-results/*.csv'
         and check it matches the schema in docs/adr/0003-results-csv-schema.md.
-      - Clean up (test-results/ and _test_targets_store/ are gitignored,
-        nothing to revert/commit, just delete on the cluster when done):
-          ssh ${HOST} 'rm -rf ${REMOTE_DIR}/test-results ${REMOTE_DIR}/_test_targets_store'
+      - Clean up (test-results/, _test_targets_store/, crew-logs/, and
+        dispatcher-logs/ are all gitignored, nothing to revert/commit,
+        just delete on the cluster when done):
+          ssh ${HOST} 'rm -rf ${REMOTE_DIR}/test-results ${REMOTE_DIR}/_test_targets_store ${REMOTE_DIR}/crew-logs ${REMOTE_DIR}/dispatcher-logs'
 EOF
