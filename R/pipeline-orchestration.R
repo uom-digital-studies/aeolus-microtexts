@@ -123,6 +123,36 @@ resolve_ollama_models_dir <- function(source,
   )
 }
 
+#' The address workers should dial to reach the dispatcher
+#'
+#' Resolves the dispatcher node's own hostname via DNS, rather than letting
+#' `crew` default to the first entry of `nanonext::ip_addr()`: Spartan
+#' compute nodes have several interfaces, and the first-listed one is not
+#' reachable from other nodes, so workers' dials time out (ADR 0006,
+#' "Amendment: dispatcher host address"). The DNS-resolved address is what
+#' other nodes use to reach this one, independent of interface order or
+#' names. Evaluated wherever the pipeline script is sourced, i.e. inside the
+#' dispatcher job.
+#'
+#' @param nodename Hostname to resolve; defaults to this machine's
+#' @param resolve Function mapping a hostname to an IP string, or `NULL` if
+#'   it can't be resolved; injectable for tests
+#'
+#' @returns A single string: the resolved IP address
+#' @keywords internal
+dispatcher_host <- function(nodename = Sys.info()[["nodename"]],
+                            resolve = utils::nsl) {
+  ip <- resolve(nodename)
+  if (is.null(ip) || length(ip) != 1L || is.na(ip) || identical(ip, "")) {
+    stop(
+      "Could not resolve dispatcher hostname '", nodename, "' to an IP ",
+      "address; pass `host` to build_slurm_controllers() explicitly",
+      call. = FALSE
+    )
+  }
+  ip
+}
+
 #' Sanitise a raw Ollama model identifier into a valid `targets` symbol name
 #'
 #' Deliberately distinct from [slugify_model()] (used for filesystem-safe
@@ -162,11 +192,22 @@ sanitise_target_name <- function(model) {
 #' @param resources A list as returned by [read_slurm_resources()];
 #'   per-model overrides are resolved via [resolve_slurm_resources()]
 #'   keyed off `models$model`
+#' @param host Address the dispatcher listens on and workers dial; see
+#'   [dispatcher_host()] for why `crew`'s own default isn't used
+#' @param seconds_launch Seconds `crew` waits for a launched worker to
+#'   connect before treating it as lost and relaunching. Must cover GPU
+#'   queue wait plus the Ollama pull, but stay well below the dispatcher
+#'   job's walltime: `crew`'s default (86400) makes a worker that dies
+#'   before connecting leave the dispatcher hanging silently until walltime
+#'   (ADR 0006)
 #'
 #' @returns A list of `crew_controller_slurm` objects, one per model, each
 #'   named for its model
 #' @export
-build_slurm_controllers <- function(models, resources = read_slurm_resources()) {
+build_slurm_controllers <- function(models,
+                                    resources = read_slurm_resources(),
+                                    host = dispatcher_host(),
+                                    seconds_launch = 3600) {
   dir.create("crew-logs", showWarnings = FALSE)
   controllers <- purrr::pmap(models, function(model, source) {
     model_resources <- resolve_slurm_resources(model, resources = resources)
@@ -174,6 +215,8 @@ build_slurm_controllers <- function(models, resources = read_slurm_resources()) 
     crew.cluster::crew_controller_slurm(
       name = model,
       workers = 1,
+      host = host,
+      seconds_launch = seconds_launch,
       options_cluster = rlang::exec(
         crew.cluster::crew_options_slurm,
         script_lines = ollama_worker_script_lines(model, source),

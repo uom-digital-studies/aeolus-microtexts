@@ -39,5 +39,5 @@ invisibly
 }
 \description{
 The reusable unit called by each RQ's \verb{run_*_pipeline()} wrapper, and, in
-turn, by the \verb{ollama-*-analysis.R} CLI scripts.
+turn, \verb{_targets.R}.
 }

@@ -15,8 +15,7 @@ A single string (possibly empty)
 }
 \description{
 The three fixed framings prepended to a schema's task instruction (see
-CONTEXT.md). Crossing these against research questions/models is future
-sweep work (not yet built); today's callers use the default,
-\code{"no_context"}.
+CONTEXT.md). These are crossed against research questions and models
+in \code{\link[=build_analysis_grid]{build_analysis_grid()}}.
 }
 \keyword{internal}

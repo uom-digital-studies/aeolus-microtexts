@@ -29,6 +29,18 @@ background, waits for it to respond, then pulls the model once so every
 task the worker runs afterwards reuses the same warm server/model.
 }
 \details{
+Unlike a plain \verb{ollama serve}, Spartan's \code{run_ollama_server} binds to a
+\emph{random} port each time (it shares GPU nodes across users, so port 11434
+can't be assumed free) and only reports the chosen \code{host:port} in its own
+stdout, e.g. \verb{OLLAMA_HOST=spartan-gpgpu126:34267 ollama <CMD>}. So this
+redirects that stdout to a log file, polls it until the \code{OLLAMA_HOST=...}
+line appears, and exports it — plus \code{OLLAMA_BASE_URL} (the env var
+\code{ellmer::chat_ollama()} actually reads, in \verb{http://host:port} form) —
+before probing readiness or pulling, so every later command in the job
+(the readiness curl, \verb{ollama pull}, and the R worker process itself) talks
+to the right port instead of silently falling back to the unused default
+of 11434.
+
 The leading \verb{#SBATCH --gres=gpu:1} line requests a GPU.
 \code{crew.cluster::crew_options_slurm()} has no dedicated \code{gres} argument,
 but \code{sbatch} keeps scanning for \verb{#SBATCH} directives up to the first

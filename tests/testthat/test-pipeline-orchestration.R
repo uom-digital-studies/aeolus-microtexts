@@ -10,6 +10,9 @@ test_resources <- list(
   )
 )
 
+# Explicit, so tests never depend on DNS-resolving the test machine's hostname
+test_host <- "127.0.0.1"
+
 test_central_models_dir <- "/data/gpfs/shared/ollama_models"
 test_project_models_dir <- "/data/gpfs/projects/test-project/ollama_models"
 
@@ -48,7 +51,7 @@ test_that("resolve_ollama_models_dir() errors on an unknown source", {
 
 test_that("build_slurm_controllers() builds one named controller per model", {
   withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
-  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources)
+  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources, host = test_host)
 
   expect_equal(names(controllers), c("llama3.1", "mistral"))
   expect_true(all(vapply(controllers, inherits, logical(1), "crew_class_controller")))
@@ -56,7 +59,7 @@ test_that("build_slurm_controllers() builds one named controller per model", {
 
 test_that("build_slurm_controllers() applies resolved per-model resources", {
   withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
-  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources)
+  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources, host = test_host)
 
   llama_options <- controllers[["llama3.1"]]$launcher$options_cluster
   mistral_options <- controllers[["mistral"]]$launcher$options_cluster
@@ -70,7 +73,7 @@ test_that("build_slurm_controllers() applies resolved per-model resources", {
 
 test_that("build_slurm_controllers() embeds the ollama pull line for each model", {
   withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
-  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources)
+  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources, host = test_host)
 
   expect_true(any(grepl(
     "ollama pull llama3.1",
@@ -86,7 +89,8 @@ test_that("build_slurm_controllers() embeds the GPU request, module loads, and O
   withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
   controllers <- build_slurm_controllers(
     tibble::tibble(model = "llama3.1", source = "central"),
-    resources = test_resources
+    resources = test_resources,
+    host = test_host
   )
 
   lines <- controllers[["llama3.1"]]$launcher$options_cluster$script_lines
@@ -109,7 +113,8 @@ test_that("build_slurm_controllers() discovers the server's randomised port rath
   withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
   controllers <- build_slurm_controllers(
     tibble::tibble(model = "llama3.1", source = "central"),
-    resources = test_resources
+    resources = test_resources,
+    host = test_host
   )
 
   lines <- controllers[["llama3.1"]]$launcher$options_cluster$script_lines
@@ -123,7 +128,8 @@ test_that("build_slurm_controllers() discovers the server's randomised port rath
 test_that("build_slurm_controllers() points project-sourced models at the project pull-cache", {
   controllers <- build_slurm_controllers(
     tibble::tibble(model = "mistral", source = "project"),
-    resources = test_resources
+    resources = test_resources,
+    host = test_host
   )
 
   lines <- controllers[["mistral"]]$launcher$options_cluster$script_lines
@@ -141,10 +147,52 @@ test_that("build_slurm_controllers() errors clearly when a central model has no 
   expect_error(
     build_slurm_controllers(
       tibble::tibble(model = "llama3.1", source = "central"),
-      resources = test_resources
+      resources = test_resources,
+      host = test_host
     ),
     "OLLAMA_CENTRAL_MODELS_DIR"
   )
+})
+
+test_that("dispatcher_host() returns the DNS-resolved address of the given hostname", {
+  fake_resolve <- function(nodename) {
+    expect_equal(nodename, "spartan-bm999")
+    "10.0.0.5"
+  }
+  expect_equal(dispatcher_host("spartan-bm999", resolve = fake_resolve), "10.0.0.5")
+})
+
+test_that("dispatcher_host() errors clearly when the hostname doesn't resolve", {
+  expect_error(
+    dispatcher_host("no-such-node", resolve = function(nodename) NULL),
+    "Could not resolve dispatcher hostname 'no-such-node'"
+  )
+  expect_error(
+    dispatcher_host("no-such-node", resolve = function(nodename) NA_character_),
+    "Could not resolve"
+  )
+})
+
+test_that("build_slurm_controllers() passes host and seconds_launch through to crew", {
+  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
+  controllers <- build_slurm_controllers(
+    test_models_tbl,
+    resources = test_resources,
+    host = "10.0.0.5",
+    seconds_launch = 1234
+  )
+
+  purrr::walk(controllers, function(controller) {
+    expect_equal(controller$client$host, "10.0.0.5")
+    expect_equal(controller$launcher$seconds_launch, 1234)
+  })
+})
+
+test_that("build_slurm_controllers() defaults seconds_launch well below crew's 24h", {
+  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
+  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources, host = test_host)
+
+  expect_equal(controllers[["llama3.1"]]$launcher$seconds_launch, 3600)
 })
 
 test_that("sanitise_target_name() collapses characters invalid in target names", {

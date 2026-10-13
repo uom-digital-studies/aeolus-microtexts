@@ -4,7 +4,12 @@
 \alias{build_slurm_controllers}
 \title{Build one crew.cluster SLURM controller per model}
 \usage{
-build_slurm_controllers(models, resources = read_slurm_resources())
+build_slurm_controllers(
+  models,
+  resources = read_slurm_resources(),
+  host = dispatcher_host(),
+  seconds_launch = 3600
+)
 }
 \arguments{
 \item{models}{A tibble as returned by \code{\link[=read_models]{read_models()}}, with \code{model} and
@@ -16,6 +21,16 @@ model's worker, but controllers are still keyed/named off the plain
 \item{resources}{A list as returned by \code{\link[=read_slurm_resources]{read_slurm_resources()}};
 per-model overrides are resolved via \code{\link[=resolve_slurm_resources]{resolve_slurm_resources()}}
 keyed off \code{models$model}}
+
+\item{host}{Address the dispatcher listens on and workers dial; see
+\code{\link[=dispatcher_host]{dispatcher_host()}} for why \code{crew}'s own default isn't used}
+
+\item{seconds_launch}{Seconds \code{crew} waits for a launched worker to
+connect before treating it as lost and relaunching. Must cover GPU
+queue wait plus the Ollama pull, but stay well below the dispatcher
+job's walltime: \code{crew}'s default (86400) makes a worker that dies
+before connecting leave the dispatcher hanging silently until walltime
+(ADR 0006)}
 }
 \value{
 A list of \code{crew_controller_slurm} objects, one per model, each
@@ -28,4 +43,13 @@ across that model's research-question x context-variant x granularity x
 include_headlines cells. Splice the result into
 \code{crew::crew_controller_group()} and pass to
 \code{tar_option_set(controller = ...)}.
+}
+\details{
+Each worker's SLURM stdout/stderr is captured to
+\verb{crew-logs/<sanitised model>_<job id>.log} (relative to the working
+directory \code{targets::tar_make()} is run from) — \code{crew.cluster} defaults
+this to \verb{/dev/null} otherwise, which silently discards module-load,
+Ollama startup/pull, and worker errors. The \verb{crew-logs/} directory is
+created here (not left to SLURM) because a missing \code{--output} directory
+makes \code{sbatch} fail the job immediately.
 }
