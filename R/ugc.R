@@ -3,21 +3,18 @@
 
 #' Coding schema for UGC-resemblance analysis (RQ3)
 #'
-#' TODO(RQ3): the `label` values and `score`/instruction text below are
-#' placeholders (`"???"`) pending the final RQ3 analysis design.
-#'
 #' @include ollama-engine.R
 #' @export
 ugc_schema <- new_rq_schema(
   name = "ugc",
   type = ellmer::type_object(
-    "???",
+    "Judge the resemblance of this text to typical user-generated content",
     label = ellmer::type_enum(
-      "???",
-      values = c("???", "???", "???")
+      "content type",
+      values = c("ugc", "other")
     ),
     score = ellmer::type_number(
-      "???"
+      "How typical this text is of ugc, from -1 (utterly atypical) to +1 (utterly typical)."
     )
   )
 )
