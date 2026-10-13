@@ -55,3 +55,4 @@ Imports:
     tibble,
     tidyr,
     tidytext
+Config/Needs/website: rmarkdown

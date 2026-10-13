@@ -50,6 +50,16 @@ default_ollama_project_models_dir <- function(start = ".") {
 #' to the right port instead of silently falling back to the unused default
 #' of 11434.
 #'
+#' `ollama-server.log` contains the TTY progress-bar redraw sequences
+#' `run_ollama_server`/`ollama pull` emit, which makes `grep` treat the file
+#' as binary and, without `-a`, print `"binary file matches"` instead of the
+#' actual match — silently breaking the `OLLAMA_HOST` extraction. Both
+#' `grep` calls here force text mode with `-a` to avoid that, and the result
+#' is checked for emptiness (failing the job immediately with a clear
+#' message) rather than letting a blank `OLLAMA_HOST` silently produce a
+#' hostless `OLLAMA_BASE_URL=http://` that only surfaces later as a
+#' confusing `ellmer`/`httr2` URL-parsing error.
+#'
 #' The leading `#SBATCH --gres=gpu:<n>` line requests the GPU(s). `gres_gpu`
 #' lets this be e.g. `"gpu:2"` for a model too large for one A100's VRAM —
 #' see `gres_gpu` in `slurm-resources.yml` (ADR 0001).
@@ -81,8 +91,9 @@ ollama_worker_script_lines <- function(model, source, gres_gpu = "gpu:1") {
     "module load foss/2022a R/4.2.2",
     paste0("export OLLAMA_MODELS=", ollama_models_dir),
     "run_ollama_server > ollama-server.log 2>&1 &",
-    "for i in $(seq 1 30); do grep -q 'OLLAMA_HOST=' ollama-server.log && break; sleep 2; done",
-    "export OLLAMA_HOST=$(grep -oE 'OLLAMA_HOST=\\S+' ollama-server.log | head -1 | cut -d= -f2)",
+    "for i in $(seq 1 30); do grep -aq 'OLLAMA_HOST=' ollama-server.log && break; sleep 2; done",
+    "export OLLAMA_HOST=$(grep -aoE 'OLLAMA_HOST=\\S+' ollama-server.log | head -1 | cut -d= -f2)",
+    "if [ -z \"$OLLAMA_HOST\" ]; then echo 'Could not find OLLAMA_HOST= in ollama-server.log; aborting' >&2; exit 1; fi",
     "export OLLAMA_BASE_URL=http://${OLLAMA_HOST}",
     "for i in $(seq 1 30); do curl -sf http://${OLLAMA_HOST}/ && break; sleep 2; done",
     paste("ollama pull", model)

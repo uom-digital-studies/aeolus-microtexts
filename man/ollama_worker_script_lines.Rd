@@ -44,6 +44,16 @@ before probing readiness or pulling, so every later command in the job
 to the right port instead of silently falling back to the unused default
 of 11434.
 
+\code{ollama-server.log} contains the TTY progress-bar redraw sequences
+\code{run_ollama_server}/\verb{ollama pull} emit, which makes \code{grep} treat the file
+as binary and, without \code{-a}, print \code{"binary file matches"} instead of the
+actual match — silently breaking the \code{OLLAMA_HOST} extraction. Both
+\code{grep} calls here force text mode with \code{-a} to avoid that, and the result
+is checked for emptiness (failing the job immediately with a clear
+message) rather than letting a blank \code{OLLAMA_HOST} silently produce a
+hostless \verb{OLLAMA_BASE_URL=http://} that only surfaces later as a
+confusing \code{ellmer}/\code{httr2} URL-parsing error.
+
 The leading \verb{#SBATCH --gres=gpu:<n>} line requests the GPU(s). \code{gres_gpu}
 lets this be e.g. \code{"gpu:2"} for a model too large for one A100's VRAM —
 see \code{gres_gpu} in \code{slurm-resources.yml} (ADR 0001).

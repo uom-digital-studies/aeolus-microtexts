@@ -140,6 +140,40 @@ test_that("build_slurm_controllers() discovers the server's randomised port rath
   expect_false(any(grepl("11434", lines)))
 })
 
+test_that("build_slurm_controllers() greps ollama-server.log in text mode so TTY control codes don't hide OLLAMA_HOST", {
+  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
+  controllers <- build_slurm_controllers(
+    tibble::tibble(model = "llama3.1", source = "central"),
+    resources = test_resources,
+    host = test_host
+  )
+
+  lines <- controllers[["llama3.1"]]$launcher$options_cluster$script_lines
+
+  expect_true(any(grepl("grep -aq 'OLLAMA_HOST='", lines, fixed = TRUE)))
+  expect_true(any(grepl("grep -aoE 'OLLAMA_HOST=\\\\S\\+'", lines)))
+})
+
+test_that("build_slurm_controllers() aborts the job if OLLAMA_HOST ends up empty", {
+  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
+  controllers <- build_slurm_controllers(
+    tibble::tibble(model = "llama3.1", source = "central"),
+    resources = test_resources,
+    host = test_host
+  )
+
+  lines <- controllers[["llama3.1"]]$launcher$options_cluster$script_lines
+  host_export_idx <- grep("^export OLLAMA_HOST=", lines)
+  check_idx <- grep("Could not find OLLAMA_HOST=", lines)
+  base_url_idx <- grep("^export OLLAMA_BASE_URL=", lines)
+
+  expect_length(check_idx, 1)
+  expect_true(any(grepl('if \\[ -z "\\$OLLAMA_HOST" \\]', lines)))
+  expect_true(any(grepl("exit 1", lines)))
+  # Must check between discovering the host and using it to build the URL
+  expect_true(check_idx > host_export_idx && check_idx < base_url_idx)
+})
+
 test_that("build_slurm_controllers() points project-sourced models at the project pull-cache", {
   controllers <- build_slurm_controllers(
     tibble::tibble(model = "mistral", source = "project"),
