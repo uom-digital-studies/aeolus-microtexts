@@ -33,7 +33,7 @@ analysis; defaults to \code{\link[=build_system_prompt]{build_system_prompt()}} 
 \code{schema}/\code{context_variant}}
 
 \item{chat_backend}{Chat client constructor with signature
-\verb{function(system_prompt, model)}, returning an object with
+\verb{function(system_prompt, model, params)}, returning an object with
 \verb{$clone()} and \verb{$chat_structured(text, type)}. Defaults to
 \code{ellmer::chat_ollama}; swap in a fake for tests}
 }

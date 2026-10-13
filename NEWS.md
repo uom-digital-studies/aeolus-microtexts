@@ -1,5 +1,7 @@
 # aeolusmicrotexts (development version)
 
+* Fixed issue passing temperature parameter to Ollama
+
 # aeolusmicrotexts 0.1.2
 
 # aeolusmicrotexts 0.1.1

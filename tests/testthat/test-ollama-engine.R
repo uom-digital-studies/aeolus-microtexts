@@ -45,10 +45,10 @@ test_that("analyse_with_schema() scores each row and adds the ADR 0003 columns",
 test_that("analyse_with_schema() passes model/context variant through to chat_backend", {
   unit_tbl <- tibble::tibble(unit_of_analysis = "only unit")
   seen <- new.env()
-  backend <- function(system_prompt, model) {
+  backend <- function(system_prompt, model, params = NULL) {
     seen$system_prompt <- system_prompt
     seen$model <- model
-    fake_chat_backend(list(list(label = "a", score = 0)))(system_prompt, model)
+    fake_chat_backend(list(list(label = "a", score = 0)))(system_prompt, model, params)
   }
 
   analyse_with_schema(unit_tbl, unit_of_analysis, test_schema,

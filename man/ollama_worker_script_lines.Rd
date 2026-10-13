@@ -42,7 +42,7 @@ to the right port instead of silently falling back to the unused default
 of 11434.
 
 The leading \verb{#SBATCH --gres=gpu:1} line requests a GPU.
-\code{crew.cluster::crew_options_slurm()} has no dedicated \code{gres} argument,
+\code{crew.cluster::crew_controller_slurm()} has no dedicated \code{gres} argument,
 but \code{sbatch} keeps scanning for \verb{#SBATCH} directives up to the first
 non-comment line, and \code{crew.cluster} places \code{script_lines} immediately
 after its own generated header with no other commands in between — so a

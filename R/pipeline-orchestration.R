@@ -51,7 +51,7 @@ default_ollama_project_models_dir <- function(start = ".") {
 #' of 11434.
 #'
 #' The leading `#SBATCH --gres=gpu:1` line requests a GPU.
-#' `crew.cluster::crew_options_slurm()` has no dedicated `gres` argument,
+#' `crew.cluster::crew_controller_slurm()` has no dedicated `gres` argument,
 #' but `sbatch` keeps scanning for `#SBATCH` directives up to the first
 #' non-comment line, and `crew.cluster` places `script_lines` immediately
 #' after its own generated header with no other commands in between — so a
@@ -211,24 +211,25 @@ build_slurm_controllers <- function(models,
   dir.create("crew-logs", showWarnings = FALSE)
   controllers <- purrr::pmap(models, function(model, source) {
     model_resources <- resolve_slurm_resources(model, resources = resources)
+    # crew.cluster >= 0.4.0 flattened crew_options_slurm()'s fields onto
+    # crew_controller_slurm() itself, prefixed with `slurm_`.
+    names(model_resources) <- paste0("slurm_", names(model_resources))
     slug <- sanitise_target_name(model)
-    crew.cluster::crew_controller_slurm(
+    rlang::exec(
+      crew.cluster::crew_controller_slurm,
       name = model,
       workers = 1,
       host = host,
       seconds_launch = seconds_launch,
-      options_cluster = rlang::exec(
-        crew.cluster::crew_options_slurm,
-        script_lines = ollama_worker_script_lines(model, source),
-        # Defaults to /dev/null, which silently discards worker
-        # stdout/stderr (module loads, ollama startup, ollama pull,
-        # mirai worker errors) - the opposite of what you want while
-        # debugging a stalled/vanished job. One file per worker job,
-        # %A = SLURM job ID.
-        log_output = file.path("crew-logs", paste0(slug, "_%A.log")),
-        log_error = file.path("crew-logs", paste0(slug, "_%A.log")),
-        !!!model_resources
-      )
+      script_lines = ollama_worker_script_lines(model, source),
+      # Defaults to /dev/null, which silently discards worker
+      # stdout/stderr (module loads, ollama startup, ollama pull,
+      # mirai worker errors) - the opposite of what you want while
+      # debugging a stalled/vanished job. One file per worker job,
+      # %A = SLURM job ID.
+      slurm_log_output = file.path("crew-logs", paste0(slug, "_%A.log")),
+      slurm_log_error = file.path("crew-logs", paste0(slug, "_%A.log")),
+      !!!model_resources
     )
   })
   rlang::set_names(controllers, models$model)

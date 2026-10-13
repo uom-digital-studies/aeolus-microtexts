@@ -82,7 +82,7 @@ build_system_prompt <- function(schema, context_variant = "no_context") {
 #'   analysis; defaults to [build_system_prompt()] applied to
 #'   `schema`/`context_variant`
 #' @param chat_backend Chat client constructor with signature
-#'   `function(system_prompt, model)`, returning an object with
+#'   `function(system_prompt, model, params)`, returning an object with
 #'   `$clone()` and `$chat_structured(text, type)`. Defaults to
 #'   `ellmer::chat_ollama`; swap in a fake for tests
 #'
@@ -96,7 +96,13 @@ analyse_with_schema <- function(aeolus_tbl,
                                  context_variant = "no_context",
                                  system_prompt = build_system_prompt(schema, context_variant),
                                  chat_backend = ellmer::chat_ollama) {
-  chat <- chat_backend(system_prompt = system_prompt, model = model)
+  # Temperature is 0 so results are completely reproducible. `chat_structured()`
+  # has no `temperature` argument (its `...` is prompt content only, strings
+  # or <content> objects), so it must be set on the chat client itself.
+  chat <- chat_backend(
+    system_prompt = system_prompt, model = model,
+    params = ellmer::params(temperature = 0)
+  )
 
   units <- dplyr::pull(aeolus_tbl, {{ unit_of_analysis }})
 
@@ -104,8 +110,7 @@ analyse_with_schema <- function(aeolus_tbl,
     units,
     function(one_unit) {
       # Clone so each call starts from a fresh (stateless) conversation
-      # Temperature is 0 so results are completely reproducible
-      chat$clone()$chat_structured(one_unit, type = schema$type, temperature = 0)
+      chat$clone()$chat_structured(one_unit, type = schema$type)
     }
   )
 

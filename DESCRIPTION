@@ -42,7 +42,7 @@ Collate:
     'ugc.R'
 Imports: 
     crew,
-    crew.cluster,
+    crew.cluster (>= 0.4.0),
     dplyr,
     ellmer,
     purrr,

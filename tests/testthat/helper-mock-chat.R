@@ -22,6 +22,6 @@ fake_chat_backend <- function(responses) {
   )
   client$clone <- function() client
 
-  # Matches ellmer::chat_ollama(system_prompt =, model =)
-  function(system_prompt, model) client
+  # Matches ellmer::chat_ollama(system_prompt =, model =, params =)
+  function(system_prompt, model, params = NULL) client
 }
