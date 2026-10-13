@@ -211,9 +211,6 @@ build_slurm_controllers <- function(models,
   dir.create("crew-logs", showWarnings = FALSE)
   controllers <- purrr::pmap(models, function(model, source) {
     model_resources <- resolve_slurm_resources(model, resources = resources)
-    # crew.cluster >= 0.4.0 flattened crew_options_slurm()'s fields onto
-    # crew_controller_slurm() itself, prefixed with `slurm_`.
-    names(model_resources) <- paste0("slurm_", names(model_resources))
     slug <- sanitise_target_name(model)
     rlang::exec(
       crew.cluster::crew_controller_slurm,
@@ -221,15 +218,22 @@ build_slurm_controllers <- function(models,
       workers = 1,
       host = host,
       seconds_launch = seconds_launch,
-      script_lines = ollama_worker_script_lines(model, source),
-      # Defaults to /dev/null, which silently discards worker
-      # stdout/stderr (module loads, ollama startup, ollama pull,
-      # mirai worker errors) - the opposite of what you want while
-      # debugging a stalled/vanished job. One file per worker job,
-      # %A = SLURM job ID.
-      slurm_log_output = file.path("crew-logs", paste0(slug, "_%A.log")),
-      slurm_log_error = file.path("crew-logs", paste0(slug, "_%A.log")),
-      !!!model_resources
+      # crew.cluster >= 0.4.0 moved script_lines and the slurm_*
+      # arguments off crew_controller_slurm() itself and onto this
+      # options_cluster object (the top-level slurm_* arguments are
+      # deprecated).
+      options_cluster = rlang::exec(
+        crew.cluster::crew_options_slurm,
+        script_lines = ollama_worker_script_lines(model, source),
+        # Defaults to /dev/null, which silently discards worker
+        # stdout/stderr (module loads, ollama startup, ollama pull,
+        # mirai worker errors) - the opposite of what you want while
+        # debugging a stalled/vanished job. One file per worker job,
+        # %A = SLURM job ID.
+        log_output = file.path("crew-logs", paste0(slug, "_%A.log")),
+        log_error = file.path("crew-logs", paste0(slug, "_%A.log")),
+        !!!model_resources
+      )
     )
   })
   rlang::set_names(controllers, models$model)

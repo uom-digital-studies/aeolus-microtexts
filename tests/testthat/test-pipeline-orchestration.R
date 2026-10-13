@@ -61,14 +61,14 @@ test_that("build_slurm_controllers() applies resolved per-model resources", {
   withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
   controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources, host = test_host)
 
-  llama_options <- controllers[["llama3.1"]]$launcher
-  mistral_options <- controllers[["mistral"]]$launcher
+  llama_options <- controllers[["llama3.1"]]$launcher$options_cluster
+  mistral_options <- controllers[["mistral"]]$launcher$options_cluster
 
   # Per-model override applied ...
-  expect_equal(llama_options$slurm_memory_gigabytes_per_cpu, 8)
+  expect_equal(llama_options$memory_gigabytes_per_cpu, 8)
   # ... while an unlisted model falls back to the default block
-  expect_equal(mistral_options$slurm_memory_gigabytes_per_cpu, 4)
-  expect_equal(mistral_options$slurm_cpus_per_task, 4)
+  expect_equal(mistral_options$memory_gigabytes_per_cpu, 4)
+  expect_equal(mistral_options$cpus_per_task, 4)
 })
 
 test_that("build_slurm_controllers() embeds the ollama pull line for each model", {
@@ -77,11 +77,11 @@ test_that("build_slurm_controllers() embeds the ollama pull line for each model"
 
   expect_true(any(grepl(
     "ollama pull llama3.1",
-    controllers[["llama3.1"]]$launcher$script_lines
+    controllers[["llama3.1"]]$launcher$options_cluster$script_lines
   )))
   expect_true(any(grepl(
     "ollama pull mistral",
-    controllers[["mistral"]]$launcher$script_lines
+    controllers[["mistral"]]$launcher$options_cluster$script_lines
   )))
 })
 
@@ -93,7 +93,7 @@ test_that("build_slurm_controllers() embeds the GPU request, module loads, and O
     host = test_host
   )
 
-  lines <- controllers[["llama3.1"]]$launcher$script_lines
+  lines <- controllers[["llama3.1"]]$launcher$options_cluster$script_lines
 
   # Must be first: sbatch only honours #SBATCH directives up to the first
   # non-comment line, and crew.cluster places script_lines right after its
@@ -117,7 +117,7 @@ test_that("build_slurm_controllers() discovers the server's randomised port rath
     host = test_host
   )
 
-  lines <- controllers[["llama3.1"]]$launcher$script_lines
+  lines <- controllers[["llama3.1"]]$launcher$options_cluster$script_lines
 
   expect_true(any(grepl("OLLAMA_HOST=\\$\\(grep", lines)))
   expect_true(any(grepl("^export OLLAMA_BASE_URL=http://\\$\\{OLLAMA_HOST\\}$", lines)))
@@ -132,7 +132,7 @@ test_that("build_slurm_controllers() points project-sourced models at the projec
     host = test_host
   )
 
-  lines <- controllers[["mistral"]]$launcher$script_lines
+  lines <- controllers[["mistral"]]$launcher$options_cluster$script_lines
   expected_dir <- default_ollama_project_models_dir()
 
   expect_true(any(grepl(
