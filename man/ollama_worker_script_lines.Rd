@@ -4,7 +4,7 @@
 \alias{ollama_worker_script_lines}
 \title{Script lines run on an Ollama worker node before it starts pulling tasks}
 \usage{
-ollama_worker_script_lines(model, source)
+ollama_worker_script_lines(model, source, gres_gpu = "gpu:1")
 }
 \arguments{
 \item{model}{Ollama model identifier}
@@ -15,6 +15,9 @@ environment variable — not git-tracked, since the real path is
 private infra detail) or \code{"project"} for this project's own
 pull-cache (a fixed sibling of the repo checkout, see
 \code{\link[=default_ollama_project_models_dir]{default_ollama_project_models_dir()}})}
+
+\item{gres_gpu}{Value for the \code{--gres} SLURM directive, e.g. \code{"gpu:1"}
+(default) or \code{"gpu:2"} for a model that needs more than one GPU's VRAM}
 }
 \value{
 A character vector of shell script lines
@@ -41,7 +44,9 @@ before probing readiness or pulling, so every later command in the job
 to the right port instead of silently falling back to the unused default
 of 11434.
 
-The leading \verb{#SBATCH --gres=gpu:1} line requests a GPU.
+The leading \verb{#SBATCH --gres=gpu:<n>} line requests the GPU(s). \code{gres_gpu}
+lets this be e.g. \code{"gpu:2"} for a model too large for one A100's VRAM —
+see \code{gres_gpu} in \code{slurm-resources.yml} (ADR 0001).
 \code{crew.cluster::crew_controller_slurm()} has no dedicated \code{gres} argument,
 but \code{sbatch} keeps scanning for \verb{#SBATCH} directives up to the first
 non-comment line, and \code{crew.cluster} places \code{script_lines} immediately

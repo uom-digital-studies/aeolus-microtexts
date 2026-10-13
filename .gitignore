@@ -31,6 +31,11 @@ skills-lock.json
 # Dispatcher job SLURM logs (dispatcher.slurm, ADR 0006)
 /dispatcher-logs/
 
+# targets store and full sweep output (scripts/sync-results.sh); only
+# manually promoted copies under inst/extdata/results/ are tracked
+/_targets/
+/results/
+
 # OS cruft
 .DS_Store
 

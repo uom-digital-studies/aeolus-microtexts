@@ -20,7 +20,10 @@ model's worker, but controllers are still keyed/named off the plain
 
 \item{resources}{A list as returned by \code{\link[=read_slurm_resources]{read_slurm_resources()}};
 per-model overrides are resolved via \code{\link[=resolve_slurm_resources]{resolve_slurm_resources()}}
-keyed off \code{models$model}}
+keyed off \code{models$model}. A resolved \code{gres_gpu} field (e.g. \code{"gpu:2"})
+is passed to \code{\link[=ollama_worker_script_lines]{ollama_worker_script_lines()}} rather than spliced into
+\code{crew.cluster::crew_options_slurm()}, which has no matching argument;
+it defaults to \code{"gpu:1"} when absent}
 
 \item{host}{Address the dispatcher listens on and workers dial; see
 \code{\link[=dispatcher_host]{dispatcher_host()}} for why \code{crew}'s own default isn't used}

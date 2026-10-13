@@ -50,7 +50,9 @@ default_ollama_project_models_dir <- function(start = ".") {
 #' to the right port instead of silently falling back to the unused default
 #' of 11434.
 #'
-#' The leading `#SBATCH --gres=gpu:1` line requests a GPU.
+#' The leading `#SBATCH --gres=gpu:<n>` line requests the GPU(s). `gres_gpu`
+#' lets this be e.g. `"gpu:2"` for a model too large for one A100's VRAM —
+#' see `gres_gpu` in `slurm-resources.yml` (ADR 0001).
 #' `crew.cluster::crew_controller_slurm()` has no dedicated `gres` argument,
 #' but `sbatch` keeps scanning for `#SBATCH` directives up to the first
 #' non-comment line, and `crew.cluster` places `script_lines` immediately
@@ -64,13 +66,15 @@ default_ollama_project_models_dir <- function(start = ".") {
 #'   private infra detail) or `"project"` for this project's own
 #'   pull-cache (a fixed sibling of the repo checkout, see
 #'   [default_ollama_project_models_dir()])
+#' @param gres_gpu Value for the `--gres` SLURM directive, e.g. `"gpu:1"`
+#'   (default) or `"gpu:2"` for a model that needs more than one GPU's VRAM
 #'
 #' @returns A character vector of shell script lines
 #' @keywords internal
-ollama_worker_script_lines <- function(model, source) {
+ollama_worker_script_lines <- function(model, source, gres_gpu = "gpu:1") {
   ollama_models_dir <- resolve_ollama_models_dir(source)
   c(
-    "#SBATCH --gres=gpu:1",
+    paste0("#SBATCH --gres=", gres_gpu),
     "module purge",
     "module load GCCcore/11.3.0",
     "module load ollama/0.9.1-CUDA-12.5.1",
@@ -191,7 +195,10 @@ sanitise_target_name <- function(model) {
 #'   `model` string
 #' @param resources A list as returned by [read_slurm_resources()];
 #'   per-model overrides are resolved via [resolve_slurm_resources()]
-#'   keyed off `models$model`
+#'   keyed off `models$model`. A resolved `gres_gpu` field (e.g. `"gpu:2"`)
+#'   is passed to [ollama_worker_script_lines()] rather than spliced into
+#'   `crew.cluster::crew_options_slurm()`, which has no matching argument;
+#'   it defaults to `"gpu:1"` when absent
 #' @param host Address the dispatcher listens on and workers dial; see
 #'   [dispatcher_host()] for why `crew`'s own default isn't used
 #' @param seconds_launch Seconds `crew` waits for a launched worker to
@@ -211,6 +218,14 @@ build_slurm_controllers <- function(models,
   dir.create("crew-logs", showWarnings = FALSE)
   controllers <- purrr::pmap(models, function(model, source) {
     model_resources <- resolve_slurm_resources(model, resources = resources)
+    # gres_gpu drives the #SBATCH --gres line (ollama_worker_script_lines()),
+    # not a crew_options_slurm() argument, so it's pulled out of the splice
+    # below rather than passed straight through.
+    gres_gpu <- model_resources[["gres_gpu"]]
+    if (is.null(gres_gpu)) {
+      gres_gpu <- "gpu:1"
+    }
+    model_resources[["gres_gpu"]] <- NULL
     slug <- sanitise_target_name(model)
     rlang::exec(
       crew.cluster::crew_controller_slurm,
@@ -224,7 +239,7 @@ build_slurm_controllers <- function(models,
       # deprecated).
       options_cluster = rlang::exec(
         crew.cluster::crew_options_slurm,
-        script_lines = ollama_worker_script_lines(model, source),
+        script_lines = ollama_worker_script_lines(model, source, gres_gpu = gres_gpu),
         # Defaults to /dev/null, which silently discards worker
         # stdout/stderr (module loads, ollama startup, ollama pull,
         # mirai worker errors) - the opposite of what you want while

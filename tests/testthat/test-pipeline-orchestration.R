@@ -57,6 +57,21 @@ test_that("build_slurm_controllers() builds one named controller per model", {
   expect_true(all(vapply(controllers, inherits, logical(1), "crew_class_controller")))
 })
 
+test_that("build_slurm_controllers() allows a per-model gres_gpu override, defaulting to gpu:1", {
+  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
+  resources_with_gres <- test_resources
+  resources_with_gres$models[["mistral"]] <- list(gres_gpu = "gpu:2")
+  controllers <- build_slurm_controllers(test_models_tbl, resources = resources_with_gres, host = test_host)
+
+  llama_lines <- controllers[["llama3.1"]]$launcher$options_cluster$script_lines
+  mistral_lines <- controllers[["mistral"]]$launcher$options_cluster$script_lines
+
+  expect_equal(llama_lines[1], "#SBATCH --gres=gpu:1")
+  expect_equal(mistral_lines[1], "#SBATCH --gres=gpu:2")
+  # gres_gpu must not leak into crew_options_slurm(), which has no such arg
+  expect_null(controllers[["mistral"]]$launcher$options_cluster$gres_gpu)
+})
+
 test_that("build_slurm_controllers() applies resolved per-model resources", {
   withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
   controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources, host = test_host)

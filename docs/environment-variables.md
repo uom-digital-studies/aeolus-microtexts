@@ -4,7 +4,7 @@ Two separate mechanisms configure this project's environment, scoped differently
 
 ## `.env` (repo root, gitignored)
 
-- Read via `source .env` at the top of root-level orchestration scripts (currently `scripts/test-run.sh`).
+- Read via `source .env` at the top of root-level orchestration scripts (`scripts/test-run.sh`, `scripts/run-sweep.sh`, `scripts/sync-results.sh`).
 - Lives on whichever machine *runs those scripts* — in practice, your laptop. `git push` to the HPC bare repo only sends committed files, so `.env` never reaches spartan, and doesn't need to.
 - Holds config for driving the HPC from the outside: which host to SSH to, which remote paths to use.
 
@@ -12,9 +12,9 @@ Known variables:
 
 | Variable | Used by | Purpose |
 | --- | --- | --- |
-| `SPARTAN_HOST` | `scripts/test-run.sh` | SSH alias for the HPC cluster (overrides the `spartan` default) |
-| `SPARTAN_REMOTE_DIR` | `scripts/test-run.sh` | Work tree path on the HPC that the bare repo's post-receive hook checks out into |
-| `SPARTAN_GIT_DIR` | `scripts/test-run.sh` | Path to the bare repo on the HPC |
+| `SPARTAN_HOST` | `scripts/test-run.sh`, `scripts/run-sweep.sh`, `scripts/sync-results.sh` | SSH alias for the HPC cluster (overrides the `spartan` default) |
+| `SPARTAN_REMOTE_DIR` | `scripts/test-run.sh`, `scripts/run-sweep.sh`, `scripts/sync-results.sh` | Work tree path on the HPC that the bare repo's post-receive hook checks out into |
+| `SPARTAN_GIT_DIR` | `scripts/test-run.sh`, `scripts/run-sweep.sh` | Path to the bare repo on the HPC |
 
 ## `.Renviron-hpc` (repo root, gitignored) → spartan's `~/.Renviron`
 

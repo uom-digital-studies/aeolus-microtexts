@@ -7,8 +7,9 @@
 [x] Get rid of `renv`. It's causing issues. Let's just rely on the R package to run, and not worry about versioning.
 [x] Run the real-HPC smoke test (`_test_targets.R` via `scripts/test-run.sh`), before trusting the pipeline for a real sweep
 [x] Audit remaining env vars (e.g. `OLLAMA_MODELS_DIR`) against `docs/environment-variables.md`'s `.env`/`~/.Renviron` split; document any still missing
-[ ] Rewrite `scripts/run-sweep.sh` so that it dispatches the job locally from laptop, using `sapphire` as the remote job dispathcing node, like `scripts/test-run.sh`
-[ ] Add `sync-results.sh` (SSH-alias-based rsync wrapper to pull `results/` down from the HPC cluster)
-[ ] Update `.gitignore` to also ignore top-level `results/` (only promoted copies under `inst/extdata/results/` are tracked)
+[x] Rewrite `scripts/run-sweep.sh` so that it dispatches the job locally from laptop, using `sapphire` as the remote job dispathcing node, like `scripts/test-run.sh`
+[x] Add `sync-results.sh` (SSH-alias-based rsync wrapper to pull `results/` down from the HPC cluster)
+[x] Update `.gitignore` to also ignore top-level `results/` (only promoted copies under `inst/extdata/results/` are tracked)
 [ ] Rewrite `README.md` to cover package usage (installation, basic example) alongside the HPC/SLURM workflow, with a high-level explanation for researchers/reviewers wanting to reproduce this analysis (see `docs/environment-variables.md` for the env-var setup split)
 [ ] Manually promote one or more curated result CSVs into `inst/extdata/results/` once a sweep has been reviewed
+[ ] Size `sweep-dispatcher.slurm`'s walltime (currently a 1440-min placeholder) against the real grid once a sweep's actual wall-clock is known
