@@ -1,3 +1,5 @@
+# aeolusmicrotexts (development version)
+
 # aeolusmicrotexts 0.1.5
 
 * Extracted the ADR 0003 results-CSV column check out of `run_pipeline_with_schema()` into its own `validate_results_schema()` in `R/schema-validation.R`. Hardened it to also check `context_variant`/`granularity` against the enum values fixed by ADR 0003 and that `include_headlines` is logical (previously presence-only); `research_question`/`label`/`score` remain unchecked since valid values there are per-schema, not fixed by the ADR.
