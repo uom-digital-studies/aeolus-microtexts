@@ -1,5 +1,10 @@
 # aeolusmicrotexts (development version)
 
+* Extracted the ADR 0003 results-CSV column check out of `run_pipeline_with_schema()` into its own `validate_results_schema()` in `R/schema-validation.R`. Hardened it to also check `context_variant`/`granularity` against the enum values fixed by ADR 0003 and that `include_headlines` is logical (previously presence-only); `research_question`/`label`/`score` remain unchecked since valid values there are per-schema, not fixed by the ADR.
+* Grid cells now checkpoint progress incrementally and resume from disk on walltime kill: `run_pipeline_with_schema()` detects existing output CSVs and skips already-scored units, reducing re-computation when a worker is killed mid-cell. `analyse_with_schema()` now accepts a `skip_indices` parameter to support this resumption logic; skipped rows are simply excluded from its return value, rather than NA-filled and then filtered out downstream.
+* `slurm-resources.yml` default `time_minutes` now set to 720 (was accidentally blank, causing workers to be killed ~10 minutes in).
+* `ollama_worker_script_lines()` now exports `OLLAMA_CONTEXT_LENGTH=2048` to prevent oversized context windows that slow down large models. (Longest microtext is 361 words long.)
+* Dropped `gemma4:26b` from `models.yml` (ollama 0.17.5 doesn't support the gemma4 architecture).
 * `scripts/sync-results.sh` now deletes the contents of the remote `dispatcher-logs/`, `ollama-logs/`, and `crew-logs/` directories after syncing them down, so logs don't pile up on spartan across sweeps.
 
 # aeolusmicrotexts 0.1.4

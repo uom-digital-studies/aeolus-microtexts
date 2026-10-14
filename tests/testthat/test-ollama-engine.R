@@ -87,3 +87,130 @@ test_that("run_pipeline_with_schema() loads, scores and writes a CSV matching th
   expect_equal(unique(written$score), 0.1)
   expect_equal(result, written, ignore_attr = TRUE)
 })
+
+test_that("analyse_with_schema() with skip_indices excludes those rows from the result", {
+  unit_tbl <- tibble::tibble(unit_of_analysis = c("first", "second", "third"))
+  backend <- fake_chat_backend(list(
+    list(label = "b", score = -0.2)
+  ))
+
+  result <- analyse_with_schema(unit_tbl, unit_of_analysis, test_schema,
+    chat_backend = backend, skip_indices = c(1, 3)
+  )
+
+  # Only row 2 scored; rows 1 and 3 are omitted entirely
+  expect_equal(nrow(result), 1)
+  expect_equal(result$unit_of_analysis, "second")
+  expect_equal(result$research_question, "widget")
+  expect_equal(result$label, "b")
+  expect_equal(result$score, -0.2)
+})
+
+test_that("run_pipeline_with_schema() resumes from existing output: scores only new units and merges results", {
+  output <- withr::local_tempfile(fileext = ".csv")
+  aeolus <- load_aeolus("sentence", TRUE)
+  n_total <- nrow(aeolus)
+  
+  # Manually create a CSV with the first 100 rows pre-scored
+  first_n <- 100
+  first_scored <- aeolus |>
+    dplyr::slice(1:first_n) |>
+    dplyr::mutate(
+      research_question = "widget",
+      model = "fake-model",
+      context_variant = "no_context",
+      label = "a",
+      score = 0.1
+    ) |>
+    dplyr::select(research_question, model, context_variant, granularity,
+                  include_headlines, microtext, unit_index, unit_of_analysis, label, score)
+  
+  readr::write_csv(first_scored, output)
+  
+  # Now resume: run_pipeline_with_schema should skip the first 100 rows and score the rest
+  remaining_count <- n_total - first_n
+  backend2 <- fake_chat_backend(
+    rep(list(list(label = "b", score = -0.3)), remaining_count)
+  )
+  result2 <- run_pipeline_with_schema("fake-model", output, test_schema,
+    granularity = "sentence", include_headlines = TRUE, chat_backend = backend2
+  )
+  
+  # Result should now have all units
+  expect_equal(nrow(result2), n_total)
+  written2 <- readr::read_csv(output, show_col_types = FALSE)
+  expect_equal(nrow(written2), n_total)
+  
+  # First 100 should still be "a" (from first_scored), rest should be "b" (from result2)
+  expect_equal(sum(written2$label == "a"), first_n)
+  expect_equal(sum(written2$label == "b"), remaining_count)
+})
+
+test_that("run_pipeline_with_schema() handles missing columns in existing CSV by rerunning all units", {
+  output <- withr::local_tempfile(fileext = ".csv")
+  aeolus <- load_aeolus("sentence", TRUE)
+  n_total <- nrow(aeolus)
+  
+  # Write a CSV with missing required columns
+  writeLines("research_question,model\nwidget,bad", output)
+  
+  # Should rerun all units
+  backend <- fake_chat_backend(
+    rep(list(list(label = "c", score = 0.7)), n_total)
+  )
+  
+  result <- run_pipeline_with_schema("fake-model", output, test_schema,
+    granularity = "sentence", include_headlines = TRUE, chat_backend = backend
+  )
+  
+  # Should have rerun all units
+  expect_equal(nrow(result), n_total)
+  written <- readr::read_csv(output, show_col_types = FALSE)
+  expect_equal(nrow(written), n_total)
+  # All rows should have been rescored with label "c"
+  expect_true(all(written$label == "c"))
+})
+
+test_that("run_pipeline_with_schema() detects and discards incomplete final row", {
+  output <- withr::local_tempfile(fileext = ".csv")
+  aeolus <- load_aeolus("sentence", TRUE)
+  n_total <- nrow(aeolus)
+  
+  # Manually create a CSV with the first 50 rows scored, but last row incomplete (NA values)
+  first_n <- 50
+  partial_scored <- aeolus |>
+    dplyr::slice(1:first_n) |>
+    dplyr::mutate(
+      research_question = "widget",
+      model = "fake-model",
+      context_variant = "no_context",
+      label = "a",
+      score = 0.1
+    ) |>
+    dplyr::select(research_question, model, context_variant, granularity,
+                  include_headlines, microtext, unit_index, unit_of_analysis, label, score)
+  
+  # Modify the last row to have NAs (incomplete)
+  partial_scored$label[nrow(partial_scored)] <- NA_character_
+  partial_scored$score[nrow(partial_scored)] <- NA_real_
+  
+  readr::write_csv(partial_scored, output)
+  
+  # Now resume: should discard incomplete row, then skip first 49 (complete) rows
+  remaining_count <- n_total - (first_n - 1)
+  backend2 <- fake_chat_backend(
+    rep(list(list(label = "b", score = -0.3)), remaining_count)
+  )
+  result2 <- run_pipeline_with_schema("fake-model", output, test_schema,
+    granularity = "sentence", include_headlines = TRUE, chat_backend = backend2
+  )
+  
+  # Result should have all units (49 complete from before + remaining new ones)
+  expect_equal(nrow(result2), n_total)
+  written2 <- readr::read_csv(output, show_col_types = FALSE)
+  expect_equal(nrow(written2), n_total)
+  
+  # First 49 should still be "a", rest should be "b"
+  expect_equal(sum(written2$label == "a"), first_n - 1)
+  expect_equal(sum(written2$label == "b"), remaining_count)
+})

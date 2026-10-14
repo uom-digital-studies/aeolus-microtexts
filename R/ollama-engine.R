@@ -85,9 +85,15 @@ build_system_prompt <- function(schema, context_variant = "no_context") {
 #'   `function(system_prompt, model, params)`, returning an object with
 #'   `$clone()` and `$chat_structured(text, type)`. Defaults to
 #'   `ellmer::chat_ollama`; swap in a fake for tests
+#' @param skip_indices Integer vector of row indices to skip during analysis.
+#'   If provided, the corresponding rows are excluded from the LLM call and
+#'   from the returned tibble entirely. Enables resumption on relaunch when
+#'   previous progress is loaded from disk. Defaults to `NULL` (analyze all
+#'   rows).
 #'
-#' @returns `aeolus_tbl` with three new columns conforming to the ADR 0003
-#'   schema: `research_question` (`schema$name`), `label`, and `score`
+#' @returns The rows of `aeolus_tbl` that were scored (i.e. excluding
+#'   `skip_indices`), with three new columns conforming to the ADR 0003
+#'   schema: `research_question` (`schema$name`), `label`, and `score`.
 #' @export
 analyse_with_schema <- function(aeolus_tbl,
                                  unit_of_analysis,
@@ -95,7 +101,8 @@ analyse_with_schema <- function(aeolus_tbl,
                                  model = "llama3.1",
                                  context_variant = "no_context",
                                  system_prompt = build_system_prompt(schema, context_variant),
-                                 chat_backend = ellmer::chat_ollama) {
+                                 chat_backend = ellmer::chat_ollama,
+                                 skip_indices = NULL) {
   # Temperature is 0 so results are completely reproducible. `chat_structured()`
   # has no `temperature` argument (its `...` is prompt content only, strings
   # or <content> objects), so it must be set on the chat client itself.
@@ -106,15 +113,22 @@ analyse_with_schema <- function(aeolus_tbl,
 
   units <- dplyr::pull(aeolus_tbl, {{ unit_of_analysis }})
 
+  # Determine which rows to actually score
+  row_indices <- seq_len(length(units))
+  if (!is.null(skip_indices)) {
+    row_indices <- row_indices[!(row_indices %in% skip_indices)]
+  }
+  units_to_score <- units[row_indices]
+
   results <- purrr::map(
-    units,
+    units_to_score,
     function(one_unit) {
       # Clone so each call starts from a fresh (stateless) conversation
       chat$clone()$chat_structured(one_unit, type = schema$type)
     }
   )
 
-  aeolus_tbl |>
+  aeolus_tbl[row_indices, ] |>
     dplyr::mutate(
       research_question = schema$name,
       label = purrr::map_chr(results, "label"),
@@ -127,6 +141,9 @@ analyse_with_schema <- function(aeolus_tbl,
 #'
 #' The reusable unit called by each RQ's `run_*_pipeline()` wrapper, and, in
 #' turn, `_targets.R`.
+#'
+#' Supports resumption: if the output CSV already exists, only new units are
+#' scored, and results are merged with the existing output before writing.
 #'
 #' @param model Name of the Ollama model to use
 #' @param output Path to write the scored results CSV to. Parent
@@ -150,15 +167,65 @@ run_pipeline_with_schema <- function(model, output, schema,
   dir.create(dirname(output), recursive = TRUE, showWarnings = FALSE)
 
   aeolus <- load_aeolus(granularity, include_headlines)
+
+  # Check if output CSV already exists and can be read
+  existing <- NULL
+  skip_indices <- NULL
+
+  if (file.exists(output)) {
+    tryCatch(
+      {
+        existing <- readr::read_csv(output, show_col_types = FALSE)
+
+        # Validate that the CSV conforms to the ADR 0003 output schema
+        validate_results_schema(existing)
+
+        # Check for incomplete rows (NAs in key columns at the end)
+        if (nrow(existing) > 0) {
+          last_row_complete <- !is.na(existing$label[nrow(existing)]) &&
+                               !is.na(existing$score[nrow(existing)])
+          if (!last_row_complete) {
+            warning("Existing output CSV has incomplete final row; discarding it.", call. = FALSE)
+            # Remove the incomplete row
+            existing <- existing[-nrow(existing), ]
+          }
+        }
+
+        # The existing CSV contains results for the first nrow(existing) rows of
+        # aeolus (since we always process aeolus in row order). Skip those rows
+        # when scoring by index position.
+        rows_already_scored <- nrow(existing)
+        if (rows_already_scored > 0) {
+          skip_indices <- seq_len(rows_already_scored)
+          new_unit_count <- nrow(aeolus) - rows_already_scored
+          message("Resuming: skipping ", rows_already_scored, " already-scored units, scoring ",
+                  new_unit_count, " new units")
+        }
+      },
+      error = function(e) {
+        warning("Failed to validate existing output CSV at ", output, "; ", conditionMessage(e),
+                ". Rerunning all units.", call. = FALSE)
+        # Reset to NULL so all units are rerun
+        skip_indices <<- NULL
+        existing <<- NULL
+      }
+    )
+  }
+
   scored <- analyse_with_schema(aeolus, unit_of_analysis, schema,
-    model = model, context_variant = context_variant, chat_backend = chat_backend
+    model = model, context_variant = context_variant, chat_backend = chat_backend,
+    skip_indices = skip_indices
   )
 
   result <- scored |>
     dplyr::mutate(model = model, context_variant = context_variant) |>
     dplyr::select(research_question, model, context_variant, granularity,
-      include_headlines, microtext, unit_index, unit_of_analysis, label, score
-    )
+      include_headlines, microtext, unit_index, unit_of_analysis, label, score)
+
+  # If we had existing progress, merge the new results with the old ones
+  if (!is.null(existing)) {
+    result <- dplyr::bind_rows(existing, result)
+  }
 
   readr::write_csv(result, output)
   message("Wrote ", nrow(result), " scored units to ", output)

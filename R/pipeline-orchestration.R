@@ -99,6 +99,7 @@ ollama_worker_script_lines <- function(model, gres_gpu = "gpu:1", model_store = 
     "module load foss/2022a R/4.2.2",
     paste0("export OLLAMA_MODELS=", model_store),
     "export OLLAMA_NOPRUNE=1",
+    "export OLLAMA_CONTEXT_LENGTH=2048",
     "mkdir -p ollama-logs",
     paste0("OLLAMA_LOG=", ollama_log),
     "run_ollama_server > $OLLAMA_LOG 2>&1 &",

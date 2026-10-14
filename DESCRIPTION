@@ -38,6 +38,7 @@ Collate:
     'pipeline-grid.R'
     'pipeline-orchestration.R'
     'read-models.R'
+    'schema-validation.R'
     'sentiment-llm.R'
     'slurm-resources.R'
     'ugc.R'

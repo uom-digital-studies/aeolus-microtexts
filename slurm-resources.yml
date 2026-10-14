@@ -2,7 +2,7 @@ default:
   partition: gpu-a100
   cpus_per_task: 4
   memory_gigabytes_per_cpu: 8
-  time_minutes:
+  time_minutes: 720
   # SBATCH --gres value; override per-model for models needing >1 GPU's
   # VRAM (see ollama_worker_script_lines() / build_slurm_controllers() in
   # R/pipeline-orchestration.R).

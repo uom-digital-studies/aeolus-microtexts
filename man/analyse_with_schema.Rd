@@ -11,7 +11,8 @@ analyse_with_schema(
   model = "llama3.1",
   context_variant = "no_context",
   system_prompt = build_system_prompt(schema, context_variant),
-  chat_backend = ellmer::chat_ollama
+  chat_backend = ellmer::chat_ollama,
+  skip_indices = NULL
 )
 }
 \arguments{
@@ -36,10 +37,17 @@ analysis; defaults to \code{\link[=build_system_prompt]{build_system_prompt()}} 
 \verb{function(system_prompt, model, params)}, returning an object with
 \verb{$clone()} and \verb{$chat_structured(text, type)}. Defaults to
 \code{ellmer::chat_ollama}; swap in a fake for tests}
+
+\item{skip_indices}{Integer vector of row indices to skip during analysis.
+If provided, the corresponding rows are excluded from the LLM call and
+from the returned tibble entirely. Enables resumption on relaunch when
+previous progress is loaded from disk. Defaults to \code{NULL} (analyze all
+rows).}
 }
 \value{
-\code{aeolus_tbl} with three new columns conforming to the ADR 0003
-schema: \code{research_question} (\code{schema$name}), \code{label}, and \code{score}
+The rows of \code{aeolus_tbl} that were scored (i.e. excluding
+\code{skip_indices}), with three new columns conforming to the ADR 0003
+schema: \code{research_question} (\code{schema$name}), \code{label}, and \code{score}.
 }
 \description{
 Analyse each unit of analysis in a tibble against a research-question schema
