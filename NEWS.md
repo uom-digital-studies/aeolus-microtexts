@@ -1,4 +1,7 @@
-# aeolusmicrotexts (development version)
+# aeolusmicrotexts 0.1.4
+
+* Fixed a race condition where concurrent GPU workers shared a single `ollama-server.log` file, causing a worker to pick up another model's `OLLAMA_HOST` (or a truncated/interleaved line). `ollama_worker_script_lines()` now writes each worker's server log to a per-model, per-SLURM-job path under `ollama-logs/`.
+* Implemented ADR 0007: the dispatcher now pulls all models into the shared model store once via `pull_models()` (`R/model-pull.R`) before any worker launches, writing a `models.csv` manifest (model + digest) for traceability; GPU workers no longer pull models themselves, only verify presence via `ollama show` and fail fast if a model is missing. Removed the old central model-store/`source` column machinery in favour of a single `model_store_dir()`.
 
 # aeolusmicrotexts 0.1.3
 
