@@ -7,7 +7,7 @@
 # structure notes) can share it without duplicating controller/target
 # construction logic.
 
-#' The project's Ollama pull-cache directory for models not centrally available
+#' The project's model store directory
 #'
 #' Computed as a fixed sibling of the repo checkout root (e.g.
 #' `<checkout>/../ollama_models`) rather than sourced from an environment
@@ -20,10 +20,10 @@
 #'
 #' @param start Directory to start searching upward from for the repo root
 #'
-#' @returns A single string: the absolute path to the project pull-cache
+#' @returns A single string: the absolute path to the model store
 #'   directory
 #' @keywords internal
-default_ollama_project_models_dir <- function(start = ".") {
+model_store_dir <- function(start = ".") {
   repo_root <- rprojroot::find_root(rprojroot::is_r_package, path = start)
   file.path(dirname(repo_root), "ollama_models")
 }
@@ -32,11 +32,11 @@ default_ollama_project_models_dir <- function(start = ".") {
 #'
 #' Loads the module chain Spartan's GPU partition requires for Ollama
 #' (`GCCcore` -> `ollama` -> `foss`/`R`, matching the example scripts on
-#' the server, points `OLLAMA_MODELS` at the shared model
+#' the server, points `OLLAMA_MODELS` at the model store
 #' directory, starts the cluster's `run_ollama_server` wrapper (Spartan's
 #' own wrapper around `ollama serve` — not called directly) in the
-#' background, waits for it to respond, then pulls the model once so every
-#' task the worker runs afterwards reuses the same warm server/model.
+#' background, waits for it to respond, then checks that the model exists
+#' (rather than pulling, which the dispatcher does once).
 #'
 #' Unlike a plain `ollama serve`, Spartan's `run_ollama_server` binds to a
 #' *random* port each time (it shares GPU nodes across users, so port 11434
@@ -45,10 +45,9 @@ default_ollama_project_models_dir <- function(start = ".") {
 #' redirects that stdout to a log file, polls it until the `OLLAMA_HOST=...`
 #' line appears, and exports it — plus `OLLAMA_BASE_URL` (the env var
 #' `ellmer::chat_ollama()` actually reads, in `http://host:port` form) —
-#' before probing readiness or pulling, so every later command in the job
-#' (the readiness curl, `ollama pull`, and the R worker process itself) talks
-#' to the right port instead of silently falling back to the unused default
-#' of 11434.
+#' before probing readiness, so every later command in the job (the readiness
+#' curl, the model check, and the R worker process itself) talks to the right
+#' port instead of silently falling back to the unused default of 11434.
 #'
 #' The server log is written to `ollama-logs/<sanitised model>_$SLURM_JOB_ID.log`
 #' rather than a fixed relative name: every GPU worker job runs from the same
@@ -80,19 +79,14 @@ default_ollama_project_models_dir <- function(start = ".") {
 #' `#SBATCH` line is still honoured here as long as it comes first.
 #'
 #' @param model Ollama model identifier
-#' @param source Where `model` lives: `"central"` for the cluster-wide
-#'   shared store (path from the required `OLLAMA_CENTRAL_MODELS_DIR`
-#'   environment variable — not git-tracked, since the real path is
-#'   private infra detail) or `"project"` for this project's own
-#'   pull-cache (a fixed sibling of the repo checkout, see
-#'   [default_ollama_project_models_dir()])
 #' @param gres_gpu Value for the `--gres` SLURM directive, e.g. `"gpu:1"`
 #'   (default) or `"gpu:2"` for a model that needs more than one GPU's VRAM
+#' @param model_store Path to the model store directory (default:
+#'   [model_store_dir()])
 #'
 #' @returns A character vector of shell script lines
 #' @keywords internal
-ollama_worker_script_lines <- function(model, source, gres_gpu = "gpu:1") {
-  ollama_models_dir <- resolve_ollama_models_dir(source)
+ollama_worker_script_lines <- function(model, gres_gpu = "gpu:1", model_store = model_store_dir()) {
   slug <- sanitise_target_name(model)
   ollama_log <- paste0("ollama-logs/", slug, "_${SLURM_JOB_ID}.log")
   c(
@@ -101,7 +95,7 @@ ollama_worker_script_lines <- function(model, source, gres_gpu = "gpu:1") {
     "module load GCCcore/11.3.0",
     "module load ollama/0.17.5-CUDA-12.8.0",
     "module load foss/2022a R/4.2.2",
-    paste0("export OLLAMA_MODELS=", ollama_models_dir),
+    paste0("export OLLAMA_MODELS=", model_store),
     "mkdir -p ollama-logs",
     paste0("OLLAMA_LOG=", ollama_log),
     "run_ollama_server > $OLLAMA_LOG 2>&1 &",
@@ -110,46 +104,7 @@ ollama_worker_script_lines <- function(model, source, gres_gpu = "gpu:1") {
     "if [ -z \"$OLLAMA_HOST\" ]; then echo \"Could not find OLLAMA_HOST= in $OLLAMA_LOG; aborting\" >&2; exit 1; fi",
     "export OLLAMA_BASE_URL=http://${OLLAMA_HOST}",
     "for i in $(seq 1 30); do curl -sf http://${OLLAMA_HOST}/ && break; sleep 2; done",
-    paste("ollama pull", model)
-  )
-}
-
-#' Resolve the `OLLAMA_MODELS` directory for a model's declared source
-#'
-#' The cluster's `ollama` module (0.17.5, see [ollama_worker_script_lines()])
-#' doesn't support multi-path
-#' `OLLAMA_MODELS`, so each model resolves to exactly one directory: the
-#' shared, non-confidential central store (`source == "central"`, path from
-#' `OLLAMA_CENTRAL_MODELS_DIR`, required — fails fast if unset) or this
-#' project's own pull-cache for models not centrally available (`source ==
-#' "project"`, [default_ollama_project_models_dir()]).
-#'
-#' @param source `"central"` or `"project"`
-#' @param project_models_dir Directory to use when `source == "project"`
-#'
-#' @returns A single string: the resolved `OLLAMA_MODELS` directory
-#' @keywords internal
-resolve_ollama_models_dir <- function(source,
-                                       project_models_dir = default_ollama_project_models_dir()) {
-  if (identical(source, "central")) {
-    central_dir <- Sys.getenv("OLLAMA_CENTRAL_MODELS_DIR", unset = "")
-    if (identical(central_dir, "")) {
-      stop(
-        "OLLAMA_CENTRAL_MODELS_DIR is not set; export it to the cluster's ",
-        "shared central model store before building the pipeline",
-        call. = FALSE
-      )
-    }
-    return(central_dir)
-  }
-
-  if (identical(source, "project")) {
-    return(project_models_dir)
-  }
-
-  stop(
-    "Unknown model source '", source, "'; must be 'central' or 'project'",
-    call. = FALSE
+    paste0("ollama show ", model, " > /dev/null || { echo \"Model ", model, " not in model store; aborting\" >&2; exit 1; }")
   )
 }
 
@@ -210,18 +165,15 @@ sanitise_target_name <- function(model) {
 #' `crew-logs/<sanitised model>_<job id>.log` (relative to the working
 #' directory `targets::tar_make()` is run from) — `crew.cluster` defaults
 #' this to `/dev/null` otherwise, which silently discards module-load,
-#' Ollama startup/pull, and worker errors. The `crew-logs/` directory is
+#' Ollama startup, and worker errors. The `crew-logs/` directory is
 #' created here (not left to SLURM) because a missing `--output` directory
 #' makes `sbatch` fail the job immediately.
 #'
-#' @param models A tibble as returned by [read_models()], with `model` and
-#'   `source` columns — `source` determines which directory
-#'   [ollama_worker_script_lines()] points `OLLAMA_MODELS` at for that
-#'   model's worker, but controllers are still keyed/named off the plain
-#'   `model` string
+#' @param models A character vector of Ollama model identifiers, or a
+#'   tibble as returned by [read_models()] (the `model` column is extracted)
 #' @param resources A list as returned by [read_slurm_resources()];
 #'   per-model overrides are resolved via [resolve_slurm_resources()]
-#'   keyed off `models$model`. A resolved `gres_gpu` field (e.g. `"gpu:2"`)
+#'   keyed off model names. A resolved `gres_gpu` field (e.g. `"gpu:2"`)
 #'   is passed to [ollama_worker_script_lines()] rather than spliced into
 #'   `crew.cluster::crew_options_slurm()`, which has no matching argument;
 #'   it defaults to `"gpu:1"` when absent
@@ -229,10 +181,11 @@ sanitise_target_name <- function(model) {
 #'   [dispatcher_host()] for why `crew`'s own default isn't used
 #' @param seconds_launch Seconds `crew` waits for a launched worker to
 #'   connect before treating it as lost and relaunching. Must cover GPU
-#'   queue wait plus the Ollama pull, but stay well below the dispatcher
-#'   job's walltime: `crew`'s default (86400) makes a worker that dies
-#'   before connecting leave the dispatcher hanging silently until walltime
-#'   (ADR 0006)
+#'   queue wait, but stay well below the dispatcher job's walltime: `crew`'s
+#'   default (86400) makes a worker that dies before connecting leave the
+#'   dispatcher hanging silently until walltime (ADR 0006). Endless relaunch
+#'   on pre-connect exit is a known behavior in crew 1.3.3, accepted per
+#'   ADR 0007
 #'
 #' @returns A list of `crew_controller_slurm` objects, one per model, each
 #'   named for its model
@@ -241,8 +194,15 @@ build_slurm_controllers <- function(models,
                                     resources = read_slurm_resources(),
                                     host = dispatcher_host(),
                                     seconds_launch = 3600) {
+  # Support both character vectors and tibbles (from read_models())
+  if (is.data.frame(models)) {
+    model_names <- models$model
+  } else {
+    model_names <- models
+  }
+
   dir.create("crew-logs", showWarnings = FALSE)
-  controllers <- purrr::pmap(models, function(model, source) {
+  controllers <- purrr::map(model_names, function(model) {
     model_resources <- resolve_slurm_resources(model, resources = resources)
     # gres_gpu drives the #SBATCH --gres line (ollama_worker_script_lines()),
     # not a crew_options_slurm() argument, so it's pulled out of the splice
@@ -265,19 +225,18 @@ build_slurm_controllers <- function(models,
       # deprecated).
       options_cluster = rlang::exec(
         crew.cluster::crew_options_slurm,
-        script_lines = ollama_worker_script_lines(model, source, gres_gpu = gres_gpu),
+        script_lines = ollama_worker_script_lines(model, gres_gpu = gres_gpu),
         # Defaults to /dev/null, which silently discards worker
-        # stdout/stderr (module loads, ollama startup, ollama pull,
-        # mirai worker errors) - the opposite of what you want while
-        # debugging a stalled/vanished job. One file per worker job,
-        # %A = SLURM job ID.
+        # stdout/stderr (module loads, ollama startup, mirai worker errors) -
+        # the opposite of what you want while debugging a stalled/vanished job.
+        # One file per worker job, %A = SLURM job ID.
         log_output = file.path("crew-logs", paste0(slug, "_%A.log")),
         log_error = file.path("crew-logs", paste0(slug, "_%A.log")),
         !!!model_resources
       )
     )
   })
-  rlang::set_names(controllers, models$model)
+  rlang::set_names(controllers, model_names)
 }
 
 #' Build the per-model grid/scored `targets` target pairs for a sweep

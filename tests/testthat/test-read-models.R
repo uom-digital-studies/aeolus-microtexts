@@ -1,9 +1,9 @@
-test_that("read_models() parses name/source entries into a tibble", {
+test_that("read_models() parses name entries into a tibble", {
   path <- withr::local_tempfile(fileext = ".yml")
   yaml::write_yaml(
     list(models = list(
-      list(name = "llama3.1:8b", source = "central"),
-      list(name = "mistral", source = "project")
+      list(name = "llama3.1:8b"),
+      list(name = "mistral")
     )),
     path
   )
@@ -11,9 +11,23 @@ test_that("read_models() parses name/source entries into a tibble", {
   result <- read_models(path)
 
   expect_s3_class(result, "tbl_df")
-  expect_named(result, c("model", "source"))
+  expect_named(result, "model")
   expect_equal(result$model, c("llama3.1:8b", "mistral"))
-  expect_equal(result$source, c("central", "project"))
+})
+
+test_that("read_models() ignores extra keys in model entries", {
+  path <- withr::local_tempfile(fileext = ".yml")
+  yaml::write_yaml(
+    list(models = list(
+      list(name = "llama3.1:8b", source = "central", extra = "ignored")
+    )),
+    path
+  )
+
+  result <- read_models(path)
+
+  expect_equal(result$model, "llama3.1:8b")
+  expect_named(result, "model")
 })
 
 test_that("read_models() errors when the file is missing", {
@@ -27,22 +41,12 @@ test_that("read_models() errors when the models block is missing", {
   expect_error(read_models(path), "missing a required 'models' block")
 })
 
-test_that("read_models() errors when an entry is missing name or source", {
+test_that("read_models() errors when an entry is missing name", {
   path <- withr::local_tempfile(fileext = ".yml")
   yaml::write_yaml(
-    list(models = list(list(name = "llama3.1:8b"))),
+    list(models = list(list(other_field = "value"))),
     path
   )
 
-  expect_error(read_models(path), "missing a required 'name' or 'source'")
-})
-
-test_that("read_models() errors on an invalid source value", {
-  path <- withr::local_tempfile(fileext = ".yml")
-  yaml::write_yaml(
-    list(models = list(list(name = "llama3.1:8b", source = "elsewhere"))),
-    path
-  )
-
-  expect_error(read_models(path), "invalid source")
+  expect_error(read_models(path), "missing a required 'name'")
 })

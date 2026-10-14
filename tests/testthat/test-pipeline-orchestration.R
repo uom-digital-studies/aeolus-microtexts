@@ -16,52 +16,26 @@ test_host <- "127.0.0.1"
 test_central_models_dir <- "/data/gpfs/shared/ollama_models"
 test_project_models_dir <- "/data/gpfs/projects/test-project/ollama_models"
 
-test_models_tbl <- tibble::tibble(
-  model = c("llama3.1", "mistral"),
-  source = c("central", "project")
-)
+test_models <- c("llama3.1", "mistral")
 
-test_that("default_ollama_project_models_dir() resolves to a sibling of the repo checkout root", {
+test_that("model_store_dir() resolves to a sibling of the repo checkout root", {
   expect_equal(
-    default_ollama_project_models_dir(start = testthat::test_path("..", "..")),
+    model_store_dir(start = testthat::test_path("..", "..")),
     file.path(dirname(rprojroot::find_package_root_file()), "ollama_models")
   )
 })
 
-test_that("resolve_ollama_models_dir() reads the central store from OLLAMA_CENTRAL_MODELS_DIR", {
-  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
-  expect_equal(resolve_ollama_models_dir("central"), test_central_models_dir)
-})
-
-test_that("resolve_ollama_models_dir() errors clearly when OLLAMA_CENTRAL_MODELS_DIR is unset", {
-  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = NA)
-  expect_error(resolve_ollama_models_dir("central"), "OLLAMA_CENTRAL_MODELS_DIR")
-})
-
-test_that("resolve_ollama_models_dir() uses the given project pull-cache dir for source = project", {
-  expect_equal(
-    resolve_ollama_models_dir("project", project_models_dir = test_project_models_dir),
-    test_project_models_dir
-  )
-})
-
-test_that("resolve_ollama_models_dir() errors on an unknown source", {
-  expect_error(resolve_ollama_models_dir("elsewhere"), "Unknown model source")
-})
-
 test_that("build_slurm_controllers() builds one named controller per model", {
-  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
-  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources, host = test_host)
+  controllers <- build_slurm_controllers(test_models, resources = test_resources, host = test_host)
 
   expect_equal(names(controllers), c("llama3.1", "mistral"))
   expect_true(all(vapply(controllers, inherits, logical(1), "crew_class_controller")))
 })
 
 test_that("build_slurm_controllers() allows a per-model gres_gpu override, defaulting to gpu:1", {
-  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
   resources_with_gres <- test_resources
   resources_with_gres$models[["mistral"]] <- list(gres_gpu = "gpu:2")
-  controllers <- build_slurm_controllers(test_models_tbl, resources = resources_with_gres, host = test_host)
+  controllers <- build_slurm_controllers(test_models, resources = resources_with_gres, host = test_host)
 
   llama_lines <- controllers[["llama3.1"]]$launcher$options_cluster$script_lines
   mistral_lines <- controllers[["mistral"]]$launcher$options_cluster$script_lines
@@ -73,8 +47,7 @@ test_that("build_slurm_controllers() allows a per-model gres_gpu override, defau
 })
 
 test_that("build_slurm_controllers() applies resolved per-model resources", {
-  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
-  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources, host = test_host)
+  controllers <- build_slurm_controllers(test_models, resources = test_resources, host = test_host)
 
   llama_options <- controllers[["llama3.1"]]$launcher$options_cluster
   mistral_options <- controllers[["mistral"]]$launcher$options_cluster
@@ -86,24 +59,22 @@ test_that("build_slurm_controllers() applies resolved per-model resources", {
   expect_equal(mistral_options$cpus_per_task, 4)
 })
 
-test_that("build_slurm_controllers() embeds the ollama pull line for each model", {
-  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
-  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources, host = test_host)
+test_that("build_slurm_controllers() embeds the model check line (ollama show) for each model", {
+  controllers <- build_slurm_controllers(test_models, resources = test_resources, host = test_host)
 
   expect_true(any(grepl(
-    "ollama pull llama3.1",
+    "ollama show llama3.1",
     controllers[["llama3.1"]]$launcher$options_cluster$script_lines
   )))
   expect_true(any(grepl(
-    "ollama pull mistral",
+    "ollama show mistral",
     controllers[["mistral"]]$launcher$options_cluster$script_lines
   )))
 })
 
 test_that("build_slurm_controllers() embeds the GPU request, module loads, and OLLAMA_MODELS export", {
-  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
   controllers <- build_slurm_controllers(
-    tibble::tibble(model = "llama3.1", source = "central"),
+    "llama3.1",
     resources = test_resources,
     host = test_host
   )
@@ -121,15 +92,14 @@ test_that("build_slurm_controllers() embeds the GPU request, module loads, and O
   expect_true(any(grepl("^run_ollama_server > \\$OLLAMA_LOG 2>&1 &$", lines)))
   expect_true(any(grepl("^mkdir -p ollama-logs$", lines)))
   expect_true(any(grepl(
-    paste0("^export OLLAMA_MODELS=", test_central_models_dir, "$"),
+    paste0("^export OLLAMA_MODELS=", model_store_dir(), "$"),
     lines
   )))
 })
 
 test_that("build_slurm_controllers() discovers the server's randomised port rather than assuming 11434", {
-  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
   controllers <- build_slurm_controllers(
-    tibble::tibble(model = "llama3.1", source = "central"),
+    "llama3.1",
     resources = test_resources,
     host = test_host
   )
@@ -143,9 +113,8 @@ test_that("build_slurm_controllers() discovers the server's randomised port rath
 })
 
 test_that("build_slurm_controllers() greps the per-job OLLAMA_LOG in text mode so TTY control codes don't hide OLLAMA_HOST", {
-  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
   controllers <- build_slurm_controllers(
-    tibble::tibble(model = "llama3.1", source = "central"),
+    "llama3.1",
     resources = test_resources,
     host = test_host
   )
@@ -157,8 +126,7 @@ test_that("build_slurm_controllers() greps the per-job OLLAMA_LOG in text mode s
 })
 
 test_that("build_slurm_controllers() gives different models different OLLAMA_LOG paths", {
-  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
-  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources, host = test_host)
+  controllers <- build_slurm_controllers(test_models, resources = test_resources, host = test_host)
 
   llama_lines <- controllers[["llama3.1"]]$launcher$options_cluster$script_lines
   mistral_lines <- controllers[["mistral"]]$launcher$options_cluster$script_lines
@@ -172,9 +140,8 @@ test_that("build_slurm_controllers() gives different models different OLLAMA_LOG
 })
 
 test_that("build_slurm_controllers() aborts the job if OLLAMA_HOST ends up empty", {
-  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
   controllers <- build_slurm_controllers(
-    tibble::tibble(model = "llama3.1", source = "central"),
+    "llama3.1",
     resources = test_resources,
     host = test_host
   )
@@ -191,33 +158,20 @@ test_that("build_slurm_controllers() aborts the job if OLLAMA_HOST ends up empty
   expect_true(check_idx > host_export_idx && check_idx < base_url_idx)
 })
 
-test_that("build_slurm_controllers() points project-sourced models at the project pull-cache", {
+test_that("build_slurm_controllers() points all models at the model store", {
   controllers <- build_slurm_controllers(
-    tibble::tibble(model = "mistral", source = "project"),
+    "mistral",
     resources = test_resources,
     host = test_host
   )
 
   lines <- controllers[["mistral"]]$launcher$options_cluster$script_lines
-  expected_dir <- default_ollama_project_models_dir()
+  expected_dir <- model_store_dir()
 
   expect_true(any(grepl(
     paste0("^export OLLAMA_MODELS=", expected_dir, "$"),
     lines
   )))
-})
-
-test_that("build_slurm_controllers() errors clearly when a central model has no OLLAMA_CENTRAL_MODELS_DIR", {
-  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = NA)
-
-  expect_error(
-    build_slurm_controllers(
-      tibble::tibble(model = "llama3.1", source = "central"),
-      resources = test_resources,
-      host = test_host
-    ),
-    "OLLAMA_CENTRAL_MODELS_DIR"
-  )
 })
 
 test_that("dispatcher_host() returns the DNS-resolved address of the given hostname", {
@@ -240,9 +194,8 @@ test_that("dispatcher_host() errors clearly when the hostname doesn't resolve", 
 })
 
 test_that("build_slurm_controllers() passes host and seconds_launch through to crew", {
-  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
   controllers <- build_slurm_controllers(
-    test_models_tbl,
+    test_models,
     resources = test_resources,
     host = "10.0.0.5",
     seconds_launch = 1234
@@ -255,8 +208,7 @@ test_that("build_slurm_controllers() passes host and seconds_launch through to c
 })
 
 test_that("build_slurm_controllers() defaults seconds_launch well below crew's 24h", {
-  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
-  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources, host = test_host)
+  controllers <- build_slurm_controllers(test_models, resources = test_resources, host = test_host)
 
   expect_equal(controllers[["llama3.1"]]$launcher$seconds_launch, 3600)
 })

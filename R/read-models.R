@@ -9,10 +9,10 @@ NULL
 #'
 #' @param path Path to the YAML file; see `models.yml` at the repo root for
 #'   the expected shape (a top-level `models` sequence of objects, each with
-#'   a `name` and a `source` of either `"central"` or `"project"`)
+#'   a `name` field; stray keys are ignored)
 #'
-#' @returns A tibble with columns `model` (Ollama model identifier) and
-#'   `source` (`"central"` or `"project"`), one row per declared model
+#' @returns A tibble with columns `model` (Ollama model identifier),
+#'   one row per declared model
 #' @export
 read_models <- function(path = "models.yml") {
   if (!file.exists(path)) {
@@ -29,23 +29,14 @@ read_models <- function(path = "models.yml") {
   }
 
   purrr::map_dfr(models, \(entry) {
-    if (is.null(entry[["name"]]) || is.null(entry[["source"]])) {
+    if (is.null(entry[["name"]])) {
       stop(
         "models file ", path,
-        " has an entry missing a required 'name' or 'source' field",
+        " has an entry missing a required 'name' field",
         call. = FALSE
       )
     }
 
-    if (!entry[["source"]] %in% c("central", "project")) {
-      stop(
-        "models file ", path, " has model '", entry[["name"]],
-        "' with an invalid source '", entry[["source"]],
-        "' (must be 'central' or 'project')",
-        call. = FALSE
-      )
-    }
-
-    tibble::tibble(model = entry[["name"]], source = entry[["source"]])
+    tibble::tibble(model = entry[["name"]])
   })
 }

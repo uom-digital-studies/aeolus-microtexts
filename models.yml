@@ -1,9 +1,5 @@
 models:
   - name: llama3.2:3b
-    source: project
   - name: llama3.3:70b
-    source: project
   - name: mistral-medium-3.5:128b
-    source: project
   - name: qwen3.8:27b
-    source: project

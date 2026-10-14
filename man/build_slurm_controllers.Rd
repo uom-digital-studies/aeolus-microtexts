@@ -12,15 +12,12 @@ build_slurm_controllers(
 )
 }
 \arguments{
-\item{models}{A tibble as returned by \code{\link[=read_models]{read_models()}}, with \code{model} and
-\code{source} columns — \code{source} determines which directory
-\code{\link[=ollama_worker_script_lines]{ollama_worker_script_lines()}} points \code{OLLAMA_MODELS} at for that
-model's worker, but controllers are still keyed/named off the plain
-\code{model} string}
+\item{models}{A character vector of Ollama model identifiers, or a
+tibble as returned by \code{\link[=read_models]{read_models()}} (the \code{model} column is extracted)}
 
 \item{resources}{A list as returned by \code{\link[=read_slurm_resources]{read_slurm_resources()}};
 per-model overrides are resolved via \code{\link[=resolve_slurm_resources]{resolve_slurm_resources()}}
-keyed off \code{models$model}. A resolved \code{gres_gpu} field (e.g. \code{"gpu:2"})
+keyed off model names. A resolved \code{gres_gpu} field (e.g. \code{"gpu:2"})
 is passed to \code{\link[=ollama_worker_script_lines]{ollama_worker_script_lines()}} rather than spliced into
 \code{crew.cluster::crew_options_slurm()}, which has no matching argument;
 it defaults to \code{"gpu:1"} when absent}
@@ -30,10 +27,11 @@ it defaults to \code{"gpu:1"} when absent}
 
 \item{seconds_launch}{Seconds \code{crew} waits for a launched worker to
 connect before treating it as lost and relaunching. Must cover GPU
-queue wait plus the Ollama pull, but stay well below the dispatcher
-job's walltime: \code{crew}'s default (86400) makes a worker that dies
-before connecting leave the dispatcher hanging silently until walltime
-(ADR 0006)}
+queue wait, but stay well below the dispatcher job's walltime: \code{crew}'s
+default (86400) makes a worker that dies before connecting leave the
+dispatcher hanging silently until walltime (ADR 0006). Endless relaunch
+on pre-connect exit is a known behavior in crew 1.3.3, accepted per
+ADR 0007}
 }
 \value{
 A list of \code{crew_controller_slurm} objects, one per model, each
@@ -52,7 +50,7 @@ Each worker's SLURM stdout/stderr is captured to
 \verb{crew-logs/<sanitised model>_<job id>.log} (relative to the working
 directory \code{targets::tar_make()} is run from) — \code{crew.cluster} defaults
 this to \verb{/dev/null} otherwise, which silently discards module-load,
-Ollama startup/pull, and worker errors. The \verb{crew-logs/} directory is
+Ollama startup, and worker errors. The \verb{crew-logs/} directory is
 created here (not left to SLURM) because a missing \code{--output} directory
 makes \code{sbatch} fail the job immediately.
 }

@@ -12,5 +12,5 @@
 [x] Update `.gitignore` to also ignore top-level `results/` (only promoted copies under `inst/extdata/results/` are tracked)
 [ ] Rewrite `README.md` to cover package usage (installation, basic example) alongside the HPC/SLURM workflow, with a high-level explanation for researchers/reviewers wanting to reproduce this analysis (see `docs/environment-variables.md` for the env-var setup split)
 [ ] Manually promote one or more curated result CSVs into `inst/extdata/results/` once a sweep has been reviewed
-[ ] Remove the central model store from the project (`source` field in `models.yml`/`read_models()`, `resolve_ollama_models_dir()`'s `central` branch, `OLLAMA_CENTRAL_MODELS_DIR` in `.Renviron-hpc`/`docs/environment-variables.md`, matching tests/docs); it caused bugs and is no longer used
+[x] Remove the central model store from the project (`source` field in `models.yml`/`read_models()`, `resolve_ollama_models_dir()`'s `central` branch, `OLLAMA_CENTRAL_MODELS_DIR` in `.Renviron-hpc`/`docs/environment-variables.md`, matching tests/docs); it caused bugs and is no longer used
 [ ] Size `sweep-dispatcher.slurm`'s walltime (currently a 1440-min placeholder) against the real grid once a sweep's actual wall-clock is known

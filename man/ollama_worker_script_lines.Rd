@@ -4,20 +4,20 @@
 \alias{ollama_worker_script_lines}
 \title{Script lines run on an Ollama worker node before it starts pulling tasks}
 \usage{
-ollama_worker_script_lines(model, source, gres_gpu = "gpu:1")
+ollama_worker_script_lines(
+  model,
+  gres_gpu = "gpu:1",
+  model_store = model_store_dir()
+)
 }
 \arguments{
 \item{model}{Ollama model identifier}
 
-\item{source}{Where \code{model} lives: \code{"central"} for the cluster-wide
-shared store (path from the required \code{OLLAMA_CENTRAL_MODELS_DIR}
-environment variable — not git-tracked, since the real path is
-private infra detail) or \code{"project"} for this project's own
-pull-cache (a fixed sibling of the repo checkout, see
-\code{\link[=default_ollama_project_models_dir]{default_ollama_project_models_dir()}})}
-
 \item{gres_gpu}{Value for the \code{--gres} SLURM directive, e.g. \code{"gpu:1"}
 (default) or \code{"gpu:2"} for a model that needs more than one GPU's VRAM}
+
+\item{model_store}{Path to the model store directory (default:
+\code{\link[=model_store_dir]{model_store_dir()}})}
 }
 \value{
 A character vector of shell script lines
@@ -25,11 +25,11 @@ A character vector of shell script lines
 \description{
 Loads the module chain Spartan's GPU partition requires for Ollama
 (\code{GCCcore} -> \code{ollama} -> \code{foss}/\code{R}, matching the example scripts on
-the server, points \code{OLLAMA_MODELS} at the shared model
+the server, points \code{OLLAMA_MODELS} at the model store
 directory, starts the cluster's \code{run_ollama_server} wrapper (Spartan's
 own wrapper around \verb{ollama serve} — not called directly) in the
-background, waits for it to respond, then pulls the model once so every
-task the worker runs afterwards reuses the same warm server/model.
+background, waits for it to respond, then checks that the model exists
+(rather than pulling, which the dispatcher does once).
 }
 \details{
 Unlike a plain \verb{ollama serve}, Spartan's \code{run_ollama_server} binds to a
@@ -39,10 +39,9 @@ stdout, e.g. \verb{OLLAMA_HOST=spartan-gpgpu126:34267 ollama <CMD>}. So this
 redirects that stdout to a log file, polls it until the \code{OLLAMA_HOST=...}
 line appears, and exports it — plus \code{OLLAMA_BASE_URL} (the env var
 \code{ellmer::chat_ollama()} actually reads, in \verb{http://host:port} form) —
-before probing readiness or pulling, so every later command in the job
-(the readiness curl, \verb{ollama pull}, and the R worker process itself) talks
-to the right port instead of silently falling back to the unused default
-of 11434.
+before probing readiness, so every later command in the job (the readiness
+curl, the model check, and the R worker process itself) talks to the right
+port instead of silently falling back to the unused default of 11434.
 
 The server log is written to \verb{ollama-logs/<sanitised model>_$SLURM_JOB_ID.log}
 rather than a fixed relative name: every GPU worker job runs from the same
