@@ -22,7 +22,8 @@ library(aeolusmicrotexts)
 
 tar_option_set(
   packages = "aeolusmicrotexts",
-  imports = "aeolusmicrotexts"
+  imports = "aeolusmicrotexts",
+  error = "continue"
 )
 
 models <- read_models()

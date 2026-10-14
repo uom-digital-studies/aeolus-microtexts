@@ -1,5 +1,7 @@
 # aeolusmicrotexts (development version)
 
+* `scripts/sync-results.sh` now deletes the contents of the remote `dispatcher-logs/`, `ollama-logs/`, and `crew-logs/` directories after syncing them down, so logs don't pile up on spartan across sweeps.
+
 # aeolusmicrotexts 0.1.4
 
 * Fixed a race condition where concurrent GPU workers shared a single `ollama-server.log` file, causing a worker to pick up another model's `OLLAMA_HOST` (or a truncated/interleaved line). `ollama_worker_script_lines()` now writes each worker's server log to a per-model, per-SLURM-job path under `ollama-logs/`.

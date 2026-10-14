@@ -17,10 +17,17 @@ source .env
 HOST="${SPARTAN_HOST:-spartan}"
 REMOTE_DIR="${SPARTAN_REMOTE_DIR:-~/aeolus-microtexts}"
 
-mkdir -p results
+mkdir -p results dispatcher-logs ollama-logs crew-logs
 
 echo "==> Syncing ${HOST}:${REMOTE_DIR}/results/ -> ./results/"
 rsync -avz --progress "${HOST}:${REMOTE_DIR}/results/" "results/"
+
+for dir in dispatcher-logs ollama-logs crew-logs; do
+  echo "==> Syncing ${HOST}:${REMOTE_DIR}/${dir}/ -> ./${dir}/"
+  rsync -avz --progress "${HOST}:${REMOTE_DIR}/${dir}/" "${dir}/"
+  echo "==> Clearing ${HOST}:${REMOTE_DIR}/${dir}/ contents"
+  ssh "${HOST}" "rm -rf ${REMOTE_DIR}/${dir}/*"
+done
 
 cat <<EOF
 
