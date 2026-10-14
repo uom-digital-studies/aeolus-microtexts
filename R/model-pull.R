@@ -35,7 +35,8 @@ parse_ollama_host <- function(lines) {
 #' @returns A tibble with columns `model` and `digest` (ID truncated to 12 hex)
 #' @keywords internal
 parse_ollama_list <- function(lines) {
-  # Expected format: tab-separated columns, first line is header
+  # Expected format: columns padded with runs of spaces (Go's text/tabwriter
+  # output, not literal tabs), first line is header
   # NAME              ID                                SIZE    MODIFIED
   # llama3.1:latest   44136d36a6868a2c1ce0f9b13eef8c9  4.7 GB  5 minutes ago
 
@@ -45,8 +46,9 @@ parse_ollama_list <- function(lines) {
 
   data_lines <- lines[-1]  # Skip header
 
-  # Split on tabs and filter to lines with at least 2 columns
-  parsed <- strsplit(data_lines, "\\t")
+  # Split on runs of 2+ whitespace chars and filter to lines with at least 2
+  # columns; trim first so trailing padding doesn't produce an empty field
+  parsed <- strsplit(stringr::str_trim(data_lines), "\\s{2,}")
   valid_rows <- which(vapply(parsed, length, integer(1)) >= 2)
 
   if (length(valid_rows) == 0) {

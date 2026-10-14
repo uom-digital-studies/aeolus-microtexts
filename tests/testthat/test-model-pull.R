@@ -36,10 +36,12 @@ test_that("parse_ollama_host() handles empty input", {
 })
 
 test_that("parse_ollama_list() converts ollama list output to tibble(model, digest)", {
+  # Real `ollama list` output: columns padded with runs of spaces (Go's
+  # text/tabwriter), not literal tabs, with trailing padding on each line
   lines <- c(
-    "NAME              \tID\t\t\t\t  SIZE\tMODIFIED",
-    "llama3.1:latest   \t44136d36a686  \t  4.7 GB\t5 minutes ago",
-    "mistral:latest    \t26d3fcbef1ba  \t 26 GB\t2 hours ago"
+    "NAME              ID              SIZE      MODIFIED        ",
+    "llama3.1:latest   44136d36a686    4.7 GB    5 minutes ago    ",
+    "mistral:latest    26d3fcbef1ba    26 GB     2 hours ago      "
   )
   result <- parse_ollama_list(lines)
   expect_equal(nrow(result), 2)
@@ -50,7 +52,7 @@ test_that("parse_ollama_list() converts ollama list output to tibble(model, dige
 
 test_that("parse_ollama_list() handles empty list", {
   lines <- c(
-    "NAME   \tID\t\t\t\t  SIZE\tMODIFIED"
+    "NAME   ID              SIZE      MODIFIED        "
   )
   result <- parse_ollama_list(lines)
   expect_equal(nrow(result), 0)
@@ -59,8 +61,8 @@ test_that("parse_ollama_list() handles empty list", {
 
 test_that("parse_ollama_list() truncates digest to 12 hex chars", {
   lines <- c(
-    "NAME              \tID\t\t\t\t  SIZE\tMODIFIED",
-    "testmodel:latest  \t44136d36a6868a2c1ce0f9b13eef8c9  \t 4.7 GB\t5 minutes ago"
+    "NAME              ID                                SIZE      MODIFIED        ",
+    "testmodel:latest  44136d36a6868a2c1ce0f9b13eef8c9    4.7 GB    5 minutes ago    "
   )
   result <- parse_ollama_list(lines)
   expect_equal(result$digest[1], "44136d36a686")
@@ -68,10 +70,10 @@ test_that("parse_ollama_list() truncates digest to 12 hex chars", {
 
 test_that("parse_ollama_list() ignores lines with fewer than expected columns", {
   lines <- c(
-    "NAME              \tID\t\t\t\t  SIZE\tMODIFIED",
-    "llama3.1:latest   \t44136d36a686  \t  4.7 GB\t5 minutes ago",
+    "NAME              ID              SIZE      MODIFIED        ",
+    "llama3.1:latest   44136d36a686    4.7 GB    5 minutes ago    ",
     "malformed line",
-    "mistral:latest    \t26d3fcbef1ba  \t 26 GB\t2 hours ago"
+    "mistral:latest    26d3fcbef1ba    26 GB     2 hours ago      "
   )
   result <- parse_ollama_list(lines)
   expect_equal(nrow(result), 2)
@@ -101,13 +103,13 @@ test_that("pull_models() pulls each model and returns tibble with digests", {
       # Simulate pull success
       list(status = 0, stdout = "")
     } else if (cmd == "ollama" && args[1] == "list") {
-      # Return both models in list
+      # Return both models in list (realistic space-padded columns)
       list(
         status = 0,
         stdout = paste(
-          "NAME\tID\tSIZE\tMODIFIED",
-          "llama3.1:latest\t44136d36a6868a2c1ce0f9b13eef8c9\t4.7 GB\t5 minutes ago",
-          "mistral:latest\t26d3fcbef1ba8a2c1ce0f9b13eef8c9\t26 GB\t2 hours ago",
+          "NAME               ID                                SIZE      MODIFIED        ",
+          "llama3.1:latest    44136d36a6868a2c1ce0f9b13eef8c9    4.7 GB    5 minutes ago    ",
+          "mistral:latest     26d3fcbef1ba8a2c1ce0f9b13eef8c9    26 GB     2 hours ago      ",
           sep = "\n"
         )
       )
@@ -144,8 +146,8 @@ test_that("pull_models() errors if a pulled model doesn't appear in ollama list"
       list(
         status = 0,
         stdout = paste(
-          "NAME\tID\tSIZE\tMODIFIED",
-          "llama3.1:latest\t44136d36a686\t4.7 GB\t5 minutes ago",
+          "NAME               ID              SIZE      MODIFIED        ",
+          "llama3.1:latest    44136d36a686    4.7 GB    5 minutes ago    ",
           sep = "\n"
         )
       )
