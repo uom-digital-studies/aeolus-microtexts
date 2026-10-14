@@ -37,12 +37,16 @@ A single R parameter that switches the pipeline to a reduced sweep for local/Doc
 _Avoid_: dev mode, dry run
 
 **Dispatcher job**:
-The single SLURM job (submitted by `scripts/test-run.sh`/`scripts/run-sweep.sh`, non-GPU, `sapphire` partition) that runs `targets::tar_make()` itself: builds the grid and coordinates workers, but does no LLM inference. Exists to get `tar_make()` off the login node (compute nodes can't dial back into a login-node-hosted `crew` socket; see `docs/adr/0001-crew-cluster-drives-slurm.md`). Submitted fire-and-forget (no `--wait`) — the submitting script returns as soon as `sbatch` accepts the job, it does not block until the run finishes.
+The single SLURM job (submitted by `scripts/test-run.sh`/`scripts/run-sweep.sh`, non-GPU, `sapphire` partition) that runs `targets::tar_make()` itself: builds the grid, pulls every model into its model store once before any worker starts, and coordinates workers, but does no LLM inference. Exists to get `tar_make()` off the login node (compute nodes can't dial back into a login-node-hosted `crew` socket; see `docs/adr/0001-crew-cluster-drives-slurm.md`). Submitted fire-and-forget (no `--wait`) — the submitting script returns as soon as `sbatch` accepts the job, it does not block until the run finishes.
 _Avoid_: tar_make job, controller job, orchestrator (dispatcher is the canonical term, paired with "worker" below)
 
 **Worker**:
-A `crew.cluster` SLURM job (one per model, GPU partition, per `slurm-resources.yml`) that runs `ollama serve`, pulls that model once, and then executes grid cells dispatched to it. Launched and torn down by the dispatcher job, not submitted directly by any script.
+A `crew.cluster` SLURM job (one per model, GPU partition, per `slurm-resources.yml`) that runs `ollama serve`, checks that its model is already present in its model store (never pulls it — the dispatcher job does), and then executes grid cells dispatched to it. Launched and torn down by the dispatcher job, not submitted directly by any script.
 _Avoid_: node, task runner (worker is the `crew`-native term, kept as-is here)
+
+**Model store**:
+The project's own directory (a sibling of the repo checkout) that every Ollama server in a run reads models from, and that the dispatcher job pulls into. Shared by every run, so only one run may be active at a time — a run starting up can delete a concurrent run's in-progress pull.
+_Avoid_: pull-cache, models dir, shared model directory, central store (the cluster-wide store, no longer used)
 
 **Chat backend**:
 An injectable argument (default `ellmer::chat_ollama`) threaded through the analysis functions, swappable for a mocked/fake implementation in fast logic tests. Exists because `ellmer` has no built-in mock/test chat provider.

@@ -18,7 +18,8 @@ resolve_ollama_models_dir(
 A single string: the resolved \code{OLLAMA_MODELS} directory
 }
 \description{
-The cluster's \code{ollama} version (0.9.1) doesn't support multi-path
+The cluster's \code{ollama} module (0.17.5, see \code{\link[=ollama_worker_script_lines]{ollama_worker_script_lines()}})
+doesn't support multi-path
 \code{OLLAMA_MODELS}, so each model resolves to exactly one directory: the
 shared, non-confidential central store (\code{source == "central"}, path from
 \code{OLLAMA_CENTRAL_MODELS_DIR}, required — fails fast if unset) or this

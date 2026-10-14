@@ -117,7 +117,9 @@ test_that("build_slurm_controllers() embeds the GPU request, module loads, and O
   expect_true(any(grepl("^module load GCCcore/", lines)))
   expect_true(any(grepl("^module load ollama/", lines)))
   expect_true(any(grepl("^module load foss/.* R/", lines)))
-  expect_true(any(grepl("^run_ollama_server > ollama-server.log 2>&1 &$", lines)))
+  expect_true(any(grepl("^OLLAMA_LOG=ollama-logs/llama3\\.1_\\$\\{SLURM_JOB_ID\\}\\.log$", lines)))
+  expect_true(any(grepl("^run_ollama_server > \\$OLLAMA_LOG 2>&1 &$", lines)))
+  expect_true(any(grepl("^mkdir -p ollama-logs$", lines)))
   expect_true(any(grepl(
     paste0("^export OLLAMA_MODELS=", test_central_models_dir, "$"),
     lines
@@ -140,7 +142,7 @@ test_that("build_slurm_controllers() discovers the server's randomised port rath
   expect_false(any(grepl("11434", lines)))
 })
 
-test_that("build_slurm_controllers() greps ollama-server.log in text mode so TTY control codes don't hide OLLAMA_HOST", {
+test_that("build_slurm_controllers() greps the per-job OLLAMA_LOG in text mode so TTY control codes don't hide OLLAMA_HOST", {
   withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
   controllers <- build_slurm_controllers(
     tibble::tibble(model = "llama3.1", source = "central"),
@@ -150,8 +152,23 @@ test_that("build_slurm_controllers() greps ollama-server.log in text mode so TTY
 
   lines <- controllers[["llama3.1"]]$launcher$options_cluster$script_lines
 
-  expect_true(any(grepl("grep -aq 'OLLAMA_HOST='", lines, fixed = TRUE)))
-  expect_true(any(grepl("grep -aoE 'OLLAMA_HOST=\\\\S\\+'", lines)))
+  expect_true(any(grepl("grep -aq 'OLLAMA_HOST=' \\$OLLAMA_LOG", lines)))
+  expect_true(any(grepl("grep -aoE 'OLLAMA_HOST=\\\\S\\+' \\$OLLAMA_LOG", lines)))
+})
+
+test_that("build_slurm_controllers() gives different models different OLLAMA_LOG paths", {
+  withr::local_envvar(OLLAMA_CENTRAL_MODELS_DIR = test_central_models_dir)
+  controllers <- build_slurm_controllers(test_models_tbl, resources = test_resources, host = test_host)
+
+  llama_lines <- controllers[["llama3.1"]]$launcher$options_cluster$script_lines
+  mistral_lines <- controllers[["mistral"]]$launcher$options_cluster$script_lines
+
+  llama_log_line <- llama_lines[grepl("^OLLAMA_LOG=", llama_lines)]
+  mistral_log_line <- mistral_lines[grepl("^OLLAMA_LOG=", mistral_lines)]
+
+  expect_length(llama_log_line, 1)
+  expect_length(mistral_log_line, 1)
+  expect_false(identical(llama_log_line, mistral_log_line))
 })
 
 test_that("build_slurm_controllers() aborts the job if OLLAMA_HOST ends up empty", {

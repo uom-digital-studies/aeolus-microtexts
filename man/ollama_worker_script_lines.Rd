@@ -44,7 +44,17 @@ before probing readiness or pulling, so every later command in the job
 to the right port instead of silently falling back to the unused default
 of 11434.
 
-\code{ollama-server.log} contains the TTY progress-bar redraw sequences
+The server log is written to \verb{ollama-logs/<sanitised model>_$SLURM_JOB_ID.log}
+rather than a fixed relative name: every GPU worker job runs from the same
+checkout-root working directory (one \code{crew.cluster} SLURM job per model,
+ADR 0001), so a shared plain filename like \code{ollama-server.log} is clobbered
+by every concurrent model's worker (and by \code{crew}'s own relaunch of a
+timed-out worker for the \emph{same} model) — a worker can read another
+worker's \verb{OLLAMA_HOST=} line, or a truncated/interleaved one. Keying the
+path on both the model slug and \verb{$SLURM_JOB_ID} (always set inside an
+\code{sbatch} job) gives every worker job its own file.
+
+This log also contains the TTY progress-bar redraw sequences
 \code{run_ollama_server}/\verb{ollama pull} emit, which makes \code{grep} treat the file
 as binary and, without \code{-a}, print \code{"binary file matches"} instead of the
 actual match — silently breaking the \code{OLLAMA_HOST} extraction. Both

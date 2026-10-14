@@ -7,6 +7,5 @@
 ugc_schema
 }
 \description{
-TODO(RQ3): the \code{label} values and \code{score}/instruction text below are
-placeholders (\code{"???"}) pending the final RQ3 analysis design.
+Coding schema for UGC-resemblance analysis (RQ3)
 }

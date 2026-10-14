@@ -50,7 +50,17 @@ default_ollama_project_models_dir <- function(start = ".") {
 #' to the right port instead of silently falling back to the unused default
 #' of 11434.
 #'
-#' `ollama-server.log` contains the TTY progress-bar redraw sequences
+#' The server log is written to `ollama-logs/<sanitised model>_$SLURM_JOB_ID.log`
+#' rather than a fixed relative name: every GPU worker job runs from the same
+#' checkout-root working directory (one `crew.cluster` SLURM job per model,
+#' ADR 0001), so a shared plain filename like `ollama-server.log` is clobbered
+#' by every concurrent model's worker (and by `crew`'s own relaunch of a
+#' timed-out worker for the *same* model) — a worker can read another
+#' worker's `OLLAMA_HOST=` line, or a truncated/interleaved one. Keying the
+#' path on both the model slug and `$SLURM_JOB_ID` (always set inside an
+#' `sbatch` job) gives every worker job its own file.
+#'
+#' This log also contains the TTY progress-bar redraw sequences
 #' `run_ollama_server`/`ollama pull` emit, which makes `grep` treat the file
 #' as binary and, without `-a`, print `"binary file matches"` instead of the
 #' actual match — silently breaking the `OLLAMA_HOST` extraction. Both
@@ -83,17 +93,21 @@ default_ollama_project_models_dir <- function(start = ".") {
 #' @keywords internal
 ollama_worker_script_lines <- function(model, source, gres_gpu = "gpu:1") {
   ollama_models_dir <- resolve_ollama_models_dir(source)
+  slug <- sanitise_target_name(model)
+  ollama_log <- paste0("ollama-logs/", slug, "_${SLURM_JOB_ID}.log")
   c(
     paste0("#SBATCH --gres=", gres_gpu),
     "module purge",
     "module load GCCcore/11.3.0",
-    "module load ollama/0.9.1-CUDA-12.5.1",
+    "module load ollama/0.17.5-CUDA-12.8.0",
     "module load foss/2022a R/4.2.2",
     paste0("export OLLAMA_MODELS=", ollama_models_dir),
-    "run_ollama_server > ollama-server.log 2>&1 &",
-    "for i in $(seq 1 30); do grep -aq 'OLLAMA_HOST=' ollama-server.log && break; sleep 2; done",
-    "export OLLAMA_HOST=$(grep -aoE 'OLLAMA_HOST=\\S+' ollama-server.log | head -1 | cut -d= -f2)",
-    "if [ -z \"$OLLAMA_HOST\" ]; then echo 'Could not find OLLAMA_HOST= in ollama-server.log; aborting' >&2; exit 1; fi",
+    "mkdir -p ollama-logs",
+    paste0("OLLAMA_LOG=", ollama_log),
+    "run_ollama_server > $OLLAMA_LOG 2>&1 &",
+    "for i in $(seq 1 30); do grep -aq 'OLLAMA_HOST=' $OLLAMA_LOG && break; sleep 2; done",
+    "export OLLAMA_HOST=$(grep -aoE 'OLLAMA_HOST=\\S+' $OLLAMA_LOG | head -1 | cut -d= -f2)",
+    "if [ -z \"$OLLAMA_HOST\" ]; then echo \"Could not find OLLAMA_HOST= in $OLLAMA_LOG; aborting\" >&2; exit 1; fi",
     "export OLLAMA_BASE_URL=http://${OLLAMA_HOST}",
     "for i in $(seq 1 30); do curl -sf http://${OLLAMA_HOST}/ && break; sleep 2; done",
     paste("ollama pull", model)
@@ -102,7 +116,8 @@ ollama_worker_script_lines <- function(model, source, gres_gpu = "gpu:1") {
 
 #' Resolve the `OLLAMA_MODELS` directory for a model's declared source
 #'
-#' The cluster's `ollama` version (0.9.1) doesn't support multi-path
+#' The cluster's `ollama` module (0.17.5, see [ollama_worker_script_lines()])
+#' doesn't support multi-path
 #' `OLLAMA_MODELS`, so each model resolves to exactly one directory: the
 #' shared, non-confidential central store (`source == "central"`, path from
 #' `OLLAMA_CENTRAL_MODELS_DIR`, required — fails fast if unset) or this
