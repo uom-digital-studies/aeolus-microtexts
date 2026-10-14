@@ -1,4 +1,4 @@
-# aeolusmicrotexts (development version)
+# aeolusmicrotexts 0.1.5
 
 * Extracted the ADR 0003 results-CSV column check out of `run_pipeline_with_schema()` into its own `validate_results_schema()` in `R/schema-validation.R`. Hardened it to also check `context_variant`/`granularity` against the enum values fixed by ADR 0003 and that `include_headlines` is logical (previously presence-only); `research_question`/`label`/`score` remain unchecked since valid values there are per-schema, not fixed by the ADR.
 * Grid cells now checkpoint progress incrementally and resume from disk on walltime kill: `run_pipeline_with_schema()` detects existing output CSVs and skips already-scored units, reducing re-computation when a worker is killed mid-cell. `analyse_with_schema()` now accepts a `skip_indices` parameter to support this resumption logic; skipped rows are simply excluded from its return value, rather than NA-filled and then filtered out downstream.
