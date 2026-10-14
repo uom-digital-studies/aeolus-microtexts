@@ -1,3 +1,5 @@
+# aeolusmicrotexts (development version)
+
 # aeolusmicrotexts 0.1.4
 
 * Fixed a race condition where concurrent GPU workers shared a single `ollama-server.log` file, causing a worker to pick up another model's `OLLAMA_HOST` (or a truncated/interleaved line). `ollama_worker_script_lines()` now writes each worker's server log to a per-model, per-SLURM-job path under `ollama-logs/`.
