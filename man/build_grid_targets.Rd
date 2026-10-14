@@ -40,4 +40,8 @@ branch).
 Each grid target's \code{output_dir} is \code{file.path(results_dir, run_id)},
 where \code{run_id} is looked up by name — the calling pipeline script must
 define a target named \code{run_id} (e.g. \code{tar_target(run_id, generate_run_id())}) so \code{targets} can track it as a dependency.
+
+\strong{Important}: The grid command references \code{models_pulled} to ensure workers
+don't launch before models are pulled. This is done via
+\code{{ models_pulled; build_analysis_grid(...) }} in the command.
 }

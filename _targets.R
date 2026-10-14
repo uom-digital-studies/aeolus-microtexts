@@ -33,5 +33,6 @@ tar_option_set(
 
 list(
   tar_target(run_id, generate_run_id()),
+  build_pull_targets(models$model),
   build_grid_targets(models$model)
 )

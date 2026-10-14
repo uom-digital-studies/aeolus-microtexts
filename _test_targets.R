@@ -22,6 +22,7 @@ tar_option_set(
 
 list(
   tar_target(run_id, generate_run_id()),
+  build_pull_targets(test_models, results_dir = "test-results"),
   build_grid_targets(
     test_models,
     research_questions = "sentiment",

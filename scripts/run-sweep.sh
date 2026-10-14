@@ -10,6 +10,12 @@
 # test instead; this script writes to the real pipeline's `results/`
 # output dir and `_targets/` store.
 #
+# IMPORTANT: One run at a time per model store. Running two sweeps
+# concurrently against the same model store leads to race conditions
+# (multiple pulls of the same model, interleaved list operations, etc.).
+# Use separate model store directories for parallel runs, or allow one
+# to complete before starting another (ADR 0007).
+#
 # IMPORTANT: `git push` only sends *committed* changes. Commit (or at
 # least `git add` + commit) local edits before running this script, or
 # the HPC will build against stale code.

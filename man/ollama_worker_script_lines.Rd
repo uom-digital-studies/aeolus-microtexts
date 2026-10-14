@@ -25,11 +25,13 @@ A character vector of shell script lines
 \description{
 Loads the module chain Spartan's GPU partition requires for Ollama
 (\code{GCCcore} -> \code{ollama} -> \code{foss}/\code{R}, matching the example scripts on
-the server, points \code{OLLAMA_MODELS} at the model store
-directory, starts the cluster's \code{run_ollama_server} wrapper (Spartan's
-own wrapper around \verb{ollama serve} — not called directly) in the
-background, waits for it to respond, then checks that the model exists
-(rather than pulling, which the dispatcher does once).
+the server), points \code{OLLAMA_MODELS} at the model store directory,
+sets \code{OLLAMA_NOPRUNE=1} to prevent the server from pruning unused models
+(the dispatcher pulls once; workers must only check for existence),
+starts the cluster's \code{run_ollama_server} wrapper (Spartan's own wrapper
+around \verb{ollama serve} — not called directly) in the background, waits for
+it to respond, then checks that the model exists in the store. Workers
+never pull; only the dispatcher does (ADR 0007).
 }
 \details{
 Unlike a plain \verb{ollama serve}, Spartan's \code{run_ollama_server} binds to a

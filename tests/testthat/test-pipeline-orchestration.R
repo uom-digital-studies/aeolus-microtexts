@@ -97,6 +97,18 @@ test_that("build_slurm_controllers() embeds the GPU request, module loads, and O
   )))
 })
 
+test_that("build_slurm_controllers() sets OLLAMA_NOPRUNE=1 to prevent model pruning", {
+  controllers <- build_slurm_controllers(
+    "llama3.1",
+    resources = test_resources,
+    host = test_host
+  )
+
+  lines <- controllers[["llama3.1"]]$launcher$options_cluster$script_lines
+
+  expect_true(any(grepl("^export OLLAMA_NOPRUNE=1$", lines)))
+})
+
 test_that("build_slurm_controllers() discovers the server's randomised port rather than assuming 11434", {
   controllers <- build_slurm_controllers(
     "llama3.1",
@@ -299,5 +311,31 @@ test_that("build_grid_targets() nests output under a custom results_dir", {
     grid <- manifest[manifest$name == "grid_fake_model", ]
 
     expect_true(grepl("test-results", grid$command, fixed = TRUE))
+  })
+})
+
+test_that("build_grid_targets() references models_pulled to ensure model availability", {
+  targets::tar_dir({
+    targets::tar_script({
+      list(
+        targets::tar_target(run_id, "fake-run"),
+        build_grid_targets(
+          models = "fake-model",
+          research_questions = "sentiment",
+          context_variants = "no_context",
+          granularities = "sentence",
+          include_headlines = TRUE
+        )
+      )
+    }, ask = FALSE)
+
+    manifest <- targets::tar_manifest(
+      fields = tidyselect::any_of(c("name", "command")),
+      callr_function = NULL
+    )
+    grid <- manifest[manifest$name == "grid_fake_model", ]
+
+    # Grid command should reference models_pulled to enforce dependency
+    expect_true(grepl("models_pulled", grid$command, fixed = TRUE))
   })
 })

@@ -32,11 +32,13 @@ model_store_dir <- function(start = ".") {
 #'
 #' Loads the module chain Spartan's GPU partition requires for Ollama
 #' (`GCCcore` -> `ollama` -> `foss`/`R`, matching the example scripts on
-#' the server, points `OLLAMA_MODELS` at the model store
-#' directory, starts the cluster's `run_ollama_server` wrapper (Spartan's
-#' own wrapper around `ollama serve` — not called directly) in the
-#' background, waits for it to respond, then checks that the model exists
-#' (rather than pulling, which the dispatcher does once).
+#' the server), points `OLLAMA_MODELS` at the model store directory,
+#' sets `OLLAMA_NOPRUNE=1` to prevent the server from pruning unused models
+#' (the dispatcher pulls once; workers must only check for existence),
+#' starts the cluster's `run_ollama_server` wrapper (Spartan's own wrapper
+#' around `ollama serve` — not called directly) in the background, waits for
+#' it to respond, then checks that the model exists in the store. Workers
+#' never pull; only the dispatcher does (ADR 0007).
 #'
 #' Unlike a plain `ollama serve`, Spartan's `run_ollama_server` binds to a
 #' *random* port each time (it shares GPU nodes across users, so port 11434
@@ -96,6 +98,7 @@ ollama_worker_script_lines <- function(model, gres_gpu = "gpu:1", model_store = 
     "module load ollama/0.17.5-CUDA-12.8.0",
     "module load foss/2022a R/4.2.2",
     paste0("export OLLAMA_MODELS=", model_store),
+    "export OLLAMA_NOPRUNE=1",
     "mkdir -p ollama-logs",
     paste0("OLLAMA_LOG=", ollama_log),
     "run_ollama_server > $OLLAMA_LOG 2>&1 &",
@@ -183,9 +186,11 @@ sanitise_target_name <- function(model) {
 #'   connect before treating it as lost and relaunching. Must cover GPU
 #'   queue wait, but stay well below the dispatcher job's walltime: `crew`'s
 #'   default (86400) makes a worker that dies before connecting leave the
-#'   dispatcher hanging silently until walltime (ADR 0006). Endless relaunch
-#'   on pre-connect exit is a known behavior in crew 1.3.3, accepted per
-#'   ADR 0007
+#'   dispatcher hanging silently until walltime (ADR 0006). If a worker dies
+#'   before connecting (e.g. module load fails, Ollama server fails to start),
+#'   `crew` will relaunch it endlessly until either the worker connects or the
+#'   dispatcher walltime is reached; this is a known behavior in crew 1.3.3,
+#'   accepted per ADR 0007
 #'
 #' @returns A list of `crew_controller_slurm` objects, one per model, each
 #'   named for its model
@@ -239,6 +244,40 @@ build_slurm_controllers <- function(models,
   rlang::set_names(controllers, model_names)
 }
 
+#' Build dispatcher pull targets
+#'
+#' Creates two targets for pulling all models once at pipeline start (ADR 0007):
+#' - `models_pulled`: executes [pull_models()] with the literal model list, so
+#'   the smart cue reruns only when the model list changes
+#' - `models_manifest`: writes the pulled models and their digests to
+#'   `<results_dir>/<run_id>/models.csv` for traceability
+#'
+#' Both targets use `deployment = "main"` to run on the dispatcher, not workers.
+#'
+#' @param models Character vector of Ollama model identifiers
+#' @param results_dir Directory to nest `models.csv` under (default: `"results"`);
+#'   the file itself is written to `file.path(results_dir, run_id, "models.csv")`
+#'
+#' @returns A list of two `tar_target_raw()` target objects
+#' @export
+build_pull_targets <- function(models, results_dir = "results") {
+  list(
+    targets::tar_target_raw(
+      name = "models_pulled",
+      command = rlang::expr(pull_models(models = !!models)),
+      deployment = "main"
+    ),
+    targets::tar_target_raw(
+      name = "models_manifest",
+      command = rlang::expr(
+        write_models_manifest(models_pulled, file.path(!!results_dir, run_id))
+      ),
+      format = "file",
+      deployment = "main"
+    )
+  )
+}
+
 #' Build the per-model grid/scored `targets` target pairs for a sweep
 #'
 #' One `(grid_<model>, scored_<model>)` target pair per model (ADR 0001):
@@ -256,6 +295,10 @@ build_slurm_controllers <- function(models,
 #' where `run_id` is looked up by name — the calling pipeline script must
 #' define a target named `run_id` (e.g. `tar_target(run_id,
 #' generate_run_id())`) so `targets` can track it as a dependency.
+#'
+#' **Important**: The grid command references `models_pulled` to ensure workers
+#' don't launch before models are pulled. This is done via
+#' `{ models_pulled; build_analysis_grid(...) }` in the command.
 #'
 #' @param models Character vector of Ollama model identifiers to sweep over
 #' @param research_questions,context_variants,granularities,include_headlines
@@ -282,14 +325,17 @@ build_grid_targets <- function(models,
       targets::tar_target_raw(
         name = grid_name,
         command = rlang::expr(
-          build_analysis_grid(
-            models = !!model,
-            research_questions = !!research_questions,
-            context_variants = !!context_variants,
-            granularities = !!granularities,
-            include_headlines = !!include_headlines,
-            output_dir = file.path(!!results_dir, run_id)
-          )
+          {
+            models_pulled
+            build_analysis_grid(
+              models = !!model,
+              research_questions = !!research_questions,
+              context_variants = !!context_variants,
+              granularities = !!granularities,
+              include_headlines = !!include_headlines,
+              output_dir = file.path(!!results_dir, run_id)
+            )
+          }
         )
       ),
       targets::tar_target_raw(

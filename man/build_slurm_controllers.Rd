@@ -29,9 +29,11 @@ it defaults to \code{"gpu:1"} when absent}
 connect before treating it as lost and relaunching. Must cover GPU
 queue wait, but stay well below the dispatcher job's walltime: \code{crew}'s
 default (86400) makes a worker that dies before connecting leave the
-dispatcher hanging silently until walltime (ADR 0006). Endless relaunch
-on pre-connect exit is a known behavior in crew 1.3.3, accepted per
-ADR 0007}
+dispatcher hanging silently until walltime (ADR 0006). If a worker dies
+before connecting (e.g. module load fails, Ollama server fails to start),
+\code{crew} will relaunch it endlessly until either the worker connects or the
+dispatcher walltime is reached; this is a known behavior in crew 1.3.3,
+accepted per ADR 0007}
 }
 \value{
 A list of \code{crew_controller_slurm} objects, one per model, each

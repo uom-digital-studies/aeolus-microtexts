@@ -21,6 +21,12 @@
 # _test_targets_store/) and `targets`/`crew.cluster`'s own relative paths
 # (crew-logs/) resolve the same way they would if run by hand from that
 # directory.
+#
+# IMPORTANT: One dispatcher per model store. Running two sweeps concurrently
+# against the same model store leads to race conditions (multiple pulls of the
+# same model, interleaved list operations, etc.). Use separate model store
+# directories for parallel runs, or allow one to complete before starting another.
+#
 #SBATCH --job-name=aeolus-dispatcher
 #SBATCH --partition=sapphire
 #SBATCH --cpus-per-task=1
@@ -32,6 +38,8 @@
 set -euo pipefail
 
 module purge
+module load GCCcore/11.3.0
+module load ollama/0.17.5-CUDA-12.8.0
 module load foss/2022a R/4.2.2
 
 Rscript -e 'targets::tar_make(script = "_test_targets.R", store = "_test_targets_store")'
