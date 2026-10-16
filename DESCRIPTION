@@ -1,6 +1,6 @@
 Package: aeolusmicrotexts
 Title: Sentiment Analysis of the Aeolus Microtexts
-Version: 0.2.0
+Version: 0.2.0.9000
 Authors@R: c(
     person("Jasper", "Harrington", , "jasper.harrington@student.unimelb.edu.au", role = "aut",
            comment = c(ORCID = "0009-0009-7363-5705")),
