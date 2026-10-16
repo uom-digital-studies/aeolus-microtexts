@@ -16,3 +16,7 @@
 ^\.posit/assistant$
 ^\.agents$
 ^vignettes/articles$
+^crew-logs$
+^ollama-logs$
+^dispatcher-logs$
+^probe-logs$

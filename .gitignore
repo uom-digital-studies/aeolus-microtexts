@@ -31,6 +31,9 @@ skills-lock.json
 # Per-worker ollama serve logs (R/pipeline-orchestration.R, ollama_worker_script_lines())
 /ollama-logs/
 
+# Structured-output probe job output (scripts/submit-structured-output-probe.R)
+/probe-logs/
+
 # Dispatcher job SLURM logs (dispatcher.slurm, ADR 0006)
 /dispatcher-logs/
 
