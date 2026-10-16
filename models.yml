@@ -1,5 +1,4 @@
 models:
   - name: llama3.2:3b
   - name: llama3.3:70b
-  - name: mistral-medium-3.5:128b
   - name: deepseek-v2:16b
