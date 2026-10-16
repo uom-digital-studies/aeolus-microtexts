@@ -4,6 +4,9 @@
 
 #' Coding schema for sentiment analysis (RQ1)
 #'
+#' @details Field order is deliberate: `score` is generated after `label`
+#'   and may depend on it; see `docs/structured-output.md`.
+#'
 #' @include ollama-engine.R
 #' @export
 sentiment_schema <- new_rq_schema(

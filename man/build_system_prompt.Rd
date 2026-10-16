@@ -15,7 +15,8 @@ build_system_prompt(schema, context_variant = "no_context")
 A single string, suitable as a chat system prompt
 }
 \description{
-Combines a context variant framing with the task instruction, which is
-read from \code{schema$type@description} rather than hand-written per RQ, so
-the schema stays the single source of truth.
+Context variant + task instruction + output specification (see
+CONTEXT.md). The task instruction is read from \code{schema$type@description}
+and the output specification from its fields (see \code{\link[=build_output_spec]{build_output_spec()}}),
+so the RQ schema stays the single source of truth.
 }

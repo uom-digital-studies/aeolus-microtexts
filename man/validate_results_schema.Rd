@@ -17,8 +17,8 @@ missing columns and/or invalid values found.
 \description{
 Checks that \code{tbl} has all columns required by the results-CSV schema
 described in \code{docs/adr/0003-results-csv-schema.md}, and that
-\code{research_question}, \code{context_variant}, and \code{granularity} only contain the
-enum values that ADR permits, and that \code{include_headlines} is logical.
-Does not check \code{label}/\code{score}, since their valid values are schema- and
-research-question-specific rather than fixed by ADR 0003.
+\code{context_variant} and \code{granularity} only contain the enum values ADR 0003
+fixes, and that \code{include_headlines} is logical. Does not check
+\code{research_question}, \code{label}, or \code{score}, since valid values for those are
+defined per-schema (see \code{\link[=new_rq_schema]{new_rq_schema()}}) rather than fixed by ADR 0003.
 }

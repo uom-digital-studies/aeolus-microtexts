@@ -5,16 +5,28 @@ Analyses the microtexts of the *Aeolus* episode of *Ulysses* as if they were soc
 ## Language
 
 **Research question (RQ)**:
-One of three fixed lines of inquiry (RQ1 sentiment, RQ2 nationalism, RQ3 UGC-resemblance). Each RQ has a fixed coding schema (an `ellmer::type_object()`) that does not vary across the pipeline sweep.
+One of three fixed lines of inquiry (RQ1 sentiment, RQ2 nationalism, RQ3 UGC-resemblance). Each RQ has a fixed RQ schema that does not vary across a run.
 _Avoid_: rq, question, analysis type
 
 **Context variant**:
 One of three framings prepended to the system prompt, giving the LLM different background about the text before it: `no_context`, `ulysses_context` ("this text is from *Ulysses*"), `media_text_context` ("this text is/is intended to be media text"). Crossed independently within each research question.
 _Avoid_: prompt variant, framing, condition
 
+**RQ schema**:
+The fixed coding schema of a research question, holding both its task instruction and the definitions of its output fields. The single source of truth for what the model is asked to do and for the output shape enforced during generation. Enforcement constrains structure only; the model reads nothing of the RQ schema except what is rendered into the system prompt.
+_Avoid_: coding schema, response format, type
+
 **Task instruction**:
-The sentence(s) telling the model what to classify for a given research question. Derived programmatically from that RQ's schema description (the single source of truth), not hand-duplicated — composed together with the context variant to form the full system prompt.
-_Avoid_: system prompt (system prompt = context variant + task instruction, not the task instruction alone)
+The sentence(s) telling the model what to classify for a given research question. Derived programmatically from the RQ schema, not hand-duplicated.
+_Avoid_: system prompt (system prompt = context variant + task instruction + output specification)
+
+**Output specification**:
+The plain-text rendering of the RQ schema's output fields (name, meaning, allowed values or type, in schema order) included in the system prompt, so the model reads what each field means rather than only having its structure enforced.
+_Avoid_: response format (collides with the API request field that carries the enforced schema), RQ schema (the source, not its rendering)
+
+**System prompt**:
+Context variant + task instruction + output specification, fixed within a grid cell. The unit of analysis is sent separately as the user turn, under a "The text" heading (results CSVs record the bare unit, without the heading).
+_Avoid_: prompt (ambiguous: system prompt or user turn)
 
 **Unit of analysis**:
 The span of text a single LLM call classifies. Defined by two orthogonal factors: **granularity** (`microtext` vs `sentence`) and **include_headline** (whether the ALL-CAPS headline is included — prepended to the unit at `microtext` granularity, or retained as its own unit rather than filtered out at `sentence` granularity). Its concrete text is recorded in a results CSV's `unit_of_analysis` column; see `docs/adr/0003-results-csv-schema.md` for the full row schema.

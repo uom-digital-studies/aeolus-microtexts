@@ -9,3 +9,7 @@ sentiment_schema
 \description{
 Coding schema for sentiment analysis (RQ1)
 }
+\details{
+Field order is deliberate: \code{score} is generated after \code{label}
+and may depend on it; see \code{docs/structured-output.md}.
+}

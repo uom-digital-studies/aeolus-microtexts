@@ -18,7 +18,73 @@ test_that("build_system_prompt() prepends the requested context variant", {
 
   expect_false(grepl("Ulysses", no_context))
   expect_true(grepl("Ulysses", ulysses))
-  expect_true(endsWith(ulysses, "Widget-ness of a sentence."))
+  expect_true(startsWith(ulysses, "This text is from James Joyce"))
+})
+
+test_that("build_system_prompt() is context variant + task instruction + output specification", {
+  prompt <- build_system_prompt(test_schema, "ulysses_context")
+  expect_equal(
+    prompt,
+    paste0(
+      "This text is from James Joyce's novel Ulysses. Widget-ness of a sentence.\n\n",
+      build_output_spec(test_schema)
+    )
+  )
+})
+
+test_that("build_output_spec() renders fields in schema order with values or type", {
+  spec <- build_output_spec(test_schema)
+  expect_equal(
+    spec,
+    paste0(
+      "## Output fields\n\n",
+      "Respond with a JSON object containing these fields, in this order.\n\n",
+      "### label\nWidget label.\nAllowed values: \"a\", \"b\".\n\n",
+      "### score\nWidget score.\nType: number."
+    )
+  )
+})
+
+test_that("build_output_spec() doesn't double terminal punctuation", {
+  schema <- new_rq_schema("x", ellmer::type_object(
+    "Task",
+    score = ellmer::type_number("From -1 to 1.")
+  ))
+  spec <- build_output_spec(schema)
+  expect_true(grepl("From -1 to 1.\n", spec, fixed = TRUE))
+  expect_false(grepl("..", spec, fixed = TRUE))
+})
+
+test_that("build_user_turn() puts the unit under a 'The text' heading", {
+  expect_equal(build_user_turn("HELLO. World."), "## The text\n\nHELLO. World.")
+})
+
+test_that("analyse_with_schema() sends the unit as a headed user turn", {
+  seen <- new.env()
+  backend <- function(system_prompt, model, params = NULL) {
+    client <- list(chat_structured = function(text, type) {
+      seen$text <- text
+      list(label = "a", score = 0)
+    })
+    client$clone <- function() client
+    client
+  }
+  result <- analyse_with_schema(
+    tibble::tibble(unit_of_analysis = "only unit"), unit_of_analysis,
+    test_schema, chat_backend = backend
+  )
+  expect_equal(seen$text, "## The text\n\nonly unit")
+  expect_equal(result$unit_of_analysis, "only unit")
+})
+
+test_that("preview_prompt() returns system prompt, user turn and JSON Schema", {
+  out <- NULL
+  expect_output(out <- preview_prompt(test_schema, unit = "A unit"), "not read by the model")
+  expect_equal(out$system_prompt, build_system_prompt(test_schema))
+  expect_equal(out$user_turn, "## The text\n\nA unit")
+  parsed <- jsonlite::fromJSON(out$json_schema, simplifyVector = FALSE)
+  expect_equal(names(parsed$properties), c("label", "score"))
+  expect_equal(unlist(parsed$properties$label$enum), c("a", "b"))
 })
 
 test_that("build_system_prompt() errors on an unknown context variant", {

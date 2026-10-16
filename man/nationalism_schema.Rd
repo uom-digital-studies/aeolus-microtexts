@@ -9,3 +9,7 @@ nationalism_schema
 \description{
 Coding schema for nationalist-orientation analysis (RQ2)
 }
+\details{
+Field order is deliberate: \code{score} is generated after \code{label}
+and may depend on it; see \code{docs/structured-output.md}.
+}

@@ -52,11 +52,61 @@ context_variant_text <- function(context_variant = "no_context") {
   )
 }
 
+#' Ensure a sentence ends with terminal punctuation
+#'
+#' @param x A character vector
+#'
+#' @returns `x`, with `"."` appended where it doesn't already end in `.`, `!`
+#'   or `?`
+#' @keywords internal
+end_sentence <- function(x) {
+  x <- trimws(x)
+  ifelse(grepl("[.!?]$", x), x, paste0(x, "."))
+}
+
+#' Render an RQ schema's output fields as the output specification
+#'
+#' Neither ellmer nor Ollama shows the structured-output schema to the
+#' model: it only constrains which tokens can be generated, so field
+#' descriptions (e.g. a score's intended range) are otherwise never read.
+#' This renders each field, in schema order, as plain text for the system
+#' prompt. See ADR 0008 and `docs/structured-output.md`.
+#'
+#' @param schema An `rq_schema`, see [new_rq_schema()]
+#'
+#' @returns A single string
+#' @export
+build_output_spec <- function(schema) {
+  fields <- S7::prop(schema$type, "properties")
+  sections <- purrr::imap_chr(fields, function(field, name) {
+    constraint <- if (S7::S7_inherits(field, ellmer::TypeEnum)) {
+      paste0(
+        "Allowed values: ",
+        paste0("\"", S7::prop(field, "values"), "\"", collapse = ", "),
+        "."
+      )
+    } else {
+      paste0("Type: ", S7::prop(field, "type"), ".")
+    }
+    paste0(
+      "### ", name, "\n",
+      end_sentence(S7::prop(field, "description")), "\n",
+      constraint
+    )
+  })
+  paste0(
+    "## Output fields\n\n",
+    "Respond with a JSON object containing these fields, in this order.\n\n",
+    paste(sections, collapse = "\n\n")
+  )
+}
+
 #' Compose the system prompt for a schema
 #'
-#' Combines a context variant framing with the task instruction, which is
-#' read from `schema$type@description` rather than hand-written per RQ, so
-#' the schema stays the single source of truth.
+#' Context variant + task instruction + output specification (see
+#' CONTEXT.md). The task instruction is read from `schema$type@description`
+#' and the output specification from its fields (see [build_output_spec()]),
+#' so the RQ schema stays the single source of truth.
 #'
 #' @param schema An `rq_schema`, see [new_rq_schema()]
 #' @param context_variant See [context_variant_text()]
@@ -64,8 +114,85 @@ context_variant_text <- function(context_variant = "no_context") {
 #' @returns A single string, suitable as a chat system prompt
 #' @export
 build_system_prompt <- function(schema, context_variant = "no_context") {
-  instruction <- S7::prop(schema$type, "description")
-  paste0(context_variant_text(context_variant), instruction, ".")
+  instruction <- end_sentence(S7::prop(schema$type, "description"))
+  paste0(
+    context_variant_text(context_variant), instruction, "\n\n",
+    build_output_spec(schema)
+  )
+}
+
+#' Compose the user turn for a unit of analysis
+#'
+#' @param unit A single unit-of-analysis string, sent unchanged below the
+#'   heading
+#'
+#' @returns A single string
+#' @export
+build_user_turn <- function(unit) {
+  paste0("## The text\n\n", unit)
+}
+
+#' Convert an ellmer type to the JSON Schema used for structured output
+#'
+#' Approximates what ellmer sends as `response_format` for the types used in
+#' RQ schemas (object, enum, basic scalars), for display in
+#' [preview_prompt()] only. ellmer's own converter is unexported.
+#'
+#' @param type An ellmer type
+#'
+#' @returns A list, serialisable with [jsonlite::toJSON()]
+#' @keywords internal
+type_to_json_schema <- function(type) {
+  description <- S7::prop(type, "description")
+  if (S7::S7_inherits(type, ellmer::TypeObject)) {
+    fields <- S7::prop(type, "properties")
+    list(
+      type = "object",
+      description = description,
+      properties = purrr::map(fields, type_to_json_schema),
+      required = names(fields),
+      additionalProperties = FALSE
+    )
+  } else if (S7::S7_inherits(type, ellmer::TypeEnum)) {
+    list(type = "string", description = description, enum = S7::prop(type, "values"))
+  } else {
+    list(type = S7::prop(type, "type"), description = description)
+  }
+}
+
+#' Preview what is sent to the model for one unit of analysis
+#'
+#' Prints the system prompt and user turn (which the model reads) and the
+#' JSON Schema sent alongside them (which only constrains generation; the
+#' model never reads it). See `docs/structured-output.md`.
+#'
+#' @param schema An `rq_schema`, see [new_rq_schema()]
+#' @param context_variant See [context_variant_text()]
+#' @param unit An example unit of analysis
+#'
+#' @returns A list with `system_prompt`, `user_turn` and `json_schema`
+#'   (a JSON string), invisibly
+#' @export
+preview_prompt <- function(schema,
+                           context_variant = "no_context",
+                           unit = "IN THE HEART OF THE HIBERNIAN METROPOLIS") {
+  out <- list(
+    system_prompt = build_system_prompt(schema, context_variant),
+    user_turn = build_user_turn(unit),
+    json_schema = as.character(jsonlite::toJSON(
+      type_to_json_schema(schema$type),
+      auto_unbox = TRUE, pretty = TRUE
+    ))
+  )
+  rule <- strrep("-", 60)
+  cat(
+    rule, "SYSTEM PROMPT (read by the model)", rule, out$system_prompt, "",
+    rule, "USER TURN (read by the model)", rule, out$user_turn, "",
+    rule, "JSON SCHEMA (constrains tokens only; not read by the model)", rule,
+    out$json_schema,
+    sep = "\n"
+  )
+  invisible(out)
 }
 
 #' Analyse each unit of analysis in a tibble against a research-question schema
@@ -124,7 +251,7 @@ analyse_with_schema <- function(aeolus_tbl,
     units_to_score,
     function(one_unit) {
       # Clone so each call starts from a fresh (stateless) conversation
-      chat$clone()$chat_structured(one_unit, type = schema$type)
+      chat$clone()$chat_structured(build_user_turn(one_unit), type = schema$type)
     }
   )
 
