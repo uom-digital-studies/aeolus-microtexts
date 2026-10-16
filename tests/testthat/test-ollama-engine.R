@@ -225,8 +225,11 @@ test_that("run_pipeline_with_schema() handles missing columns in existing CSV by
     rep(list(list(label = "c", score = 0.7)), n_total)
   )
   
-  result <- run_pipeline_with_schema("fake-model", output, test_schema,
-    granularity = "sentence", include_headlines = TRUE, chat_backend = backend
+  expect_warning(
+    result <- run_pipeline_with_schema("fake-model", output, test_schema,
+      granularity = "sentence", include_headlines = TRUE, chat_backend = backend
+    ),
+    "Failed to validate existing output CSV"
   )
   
   # Should have rerun all units
@@ -267,8 +270,11 @@ test_that("run_pipeline_with_schema() detects and discards incomplete final row"
   backend2 <- fake_chat_backend(
     rep(list(list(label = "b", score = -0.3)), remaining_count)
   )
-  result2 <- run_pipeline_with_schema("fake-model", output, test_schema,
-    granularity = "sentence", include_headlines = TRUE, chat_backend = backend2
+  expect_warning(
+    result2 <- run_pipeline_with_schema("fake-model", output, test_schema,
+      granularity = "sentence", include_headlines = TRUE, chat_backend = backend2
+    ),
+    "incomplete final row"
   )
   
   # Result should have all units (49 complete from before + remaining new ones)
