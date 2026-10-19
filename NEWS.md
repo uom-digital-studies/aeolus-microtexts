@@ -1,5 +1,7 @@
 # aeolusmicrotexts (development version)
 
+* In `_targets.R`, target `run_id` now always runs.
+
 # aeolusmicrotexts 0.2.0
 
 * **Prompt change affecting results (ADR 0008); results from earlier runs aren't comparable.** Neither ellmer nor Ollama shows the structured-output schema to the model, so field descriptions (incl. score ranges) were never read. The system prompt is now context variant + task instruction + output specification. The output specification is a new `build_output_spec()` that renders each field's name, description, and allowed values or type. The user turn now puts the unit under a `## The text` heading (new `build_user_turn()`); results CSVs still record the bare unit.

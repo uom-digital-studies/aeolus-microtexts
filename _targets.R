@@ -33,7 +33,7 @@ tar_option_set(
 )
 
 list(
-  tar_target(run_id, generate_run_id()),
+  tar_target(run_id, generate_run_id(), cue = targets::tar_cue(mode = "always")),
   build_pull_targets(models$model),
   build_grid_targets(models$model)
 )
