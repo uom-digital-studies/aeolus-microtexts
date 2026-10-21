@@ -34,14 +34,15 @@ Collate:
     'data.R'
     'model-pull.R'
     'ollama-engine.R'
-    'nationalism.R'
     'pipeline-grid.R'
     'pipeline-orchestration.R'
     'read-models.R'
-    'schema-validation.R'
-    'sentiment-llm.R'
+    'rq-schema-type.R'
+    'rq-nationalism.R'
+    'rq-sentiment.R'
+    'rq-ugc.R'
     'slurm-resources.R'
-    'ugc.R'
+    'validate-results.R'
 Imports: 
     crew,
     crew.cluster (>= 0.4.0),

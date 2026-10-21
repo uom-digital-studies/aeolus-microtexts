@@ -7,7 +7,7 @@
 #' @details Field order is deliberate: `score` is generated after `label`
 #'   and may depend on it; see `docs/structured-output.md`.
 #'
-#' @include ollama-engine.R
+#' @include rq-schema-type.R
 #' @export
 sentiment_schema <- new_rq_schema(
   name = "sentiment",

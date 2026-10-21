@@ -1,12 +1,12 @@
 # RQ3: LLM-based user-generated-content (UGC) resemblance analysis via
-# Ollama. Scaffolding only — schema not yet finalised, no analysis logic.
+# Ollama.
 
 #' Coding schema for UGC-resemblance analysis (RQ3)
 #'
 #' @details Field order is deliberate: `score` is generated after `label`
 #'   and may depend on it; see `docs/structured-output.md`.
 #'
-#' @include ollama-engine.R
+#' @include rq-schema-type.R
 #' @export
 ugc_schema <- new_rq_schema(
   name = "ugc",

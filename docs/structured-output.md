@@ -2,6 +2,19 @@
 
 Notes from investigating how an RQ schema affects generation (Oct 2026, ellmer 0.5.0, Ollama). Decision recorded in ADR 0008.
 
+## The RQ schema
+
+The RQ schema is the single source of truth for each RQ in the project (see `CONTEXT.md`, `R/rq-schema-type.R`).
+
+The schema has two parts: a `name` (a string) and a `type` (an `ellmer:TypeObject`).
+
+Each RQ has identical structure, so that each experiment produces results in the same format for easy concatenation (see `ADR0003`).
+
+At the moment, the `type` object has two required fields:
+
+- `label`: An enum used by the LLM to classify the unit of analysis
+- `score`: A score between -1 and 1 indicating the fit between the label and the text
+
 ## What is sent
 
 `chat$chat_structured(text, type = schema$type)` sends one request with two separate parts:

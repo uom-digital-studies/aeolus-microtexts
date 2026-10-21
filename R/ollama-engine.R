@@ -6,32 +6,6 @@
 # Research question, model, and context variant are independent factors,
 # each supplied separately, so they can be crossed freely (see CONTEXT.md).
 
-#' Construct a research-question coding schema
-#'
-#' A schema describes only the task and desired output shape for a research
-#' question: the `ellmer::type_object()` used for structured LLM output,
-#' whose `description` doubles as the task instruction (the single source
-#' of truth, not hand-duplicated in a separate prompt string). It does not
-#' fix a model or context variant — those are independent factors, supplied
-#' separately when the schema is applied.
-#'
-#' @param name Short RQ identifier (e.g. `"sentiment"`), recorded verbatim in
-#'   the `research_question` output column (see [analyse_with_schema()])
-#' @param type An `ellmer::type_object()` describing the structured response;
-#'   its `@description` is used as the task instruction
-#'
-#' @returns An `rq_schema` object
-#' @export
-new_rq_schema <- function(name, type) {
-  structure(
-    list(
-      name = name,
-      type = type
-    ),
-    class = "rq_schema"
-  )
-}
-
 #' Context variant framings
 #'
 #' The three fixed framings prepended to a schema's task instruction (see
