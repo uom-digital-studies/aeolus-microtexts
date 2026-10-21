@@ -266,9 +266,6 @@ analyse_with_schema <- function(aeolus_tbl,
 #' Run the full Ollama pipeline for a research-question schema: load,
 #' tokenise, score, write
 #'
-#' The reusable unit called by each RQ's `run_*_pipeline()` wrapper, and, in
-#' turn, `_targets.R`.
-#'
 #' Supports resumption: if the output CSV already exists, only new units are
 #' scored, and results are merged with the existing output before writing.
 #'

@@ -38,10 +38,6 @@ The scored results tibble (matching the ADR 0003 CSV schema),
 invisibly
 }
 \description{
-The reusable unit called by each RQ's \verb{run_*_pipeline()} wrapper, and, in
-turn, \verb{_targets.R}.
-}
-\details{
 Supports resumption: if the output CSV already exists, only new units are
 scored, and results are merged with the existing output before writing.
 }
