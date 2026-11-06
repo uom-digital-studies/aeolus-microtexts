@@ -1,4 +1,10 @@
 models:
   - name: llama3.2:3b
-  - name: llama3.3:70b
-  - name: deepseek-v2:16b
+  - name: deepseek-v2:16b # <20GB
+  - name: muse-glimmer:30b # 18 GB
+  - name: gemma4:31b # 20GB
+  - name: qwen3.8:27b # 18GB
+  - name: llama3.3:70b # 43GB
+  - name: gpt-oss:120b # 65GB
+  - name: llama4:scout # 67GB
+

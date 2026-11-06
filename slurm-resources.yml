@@ -8,18 +8,15 @@ default:
   # R/pipeline-orchestration.R).
   gres_gpu: "gpu:1"
 models:
-  mistral-medium-3.5:128b:
-    # 80 GB model — same 4*20=80GB reasoning as llama3.3:70b below.
-    # gres_gpu: ~80GB of weights leaves little headroom for KV
-    # cache/context on a single 80GB A100, so request 2 GPUs rather than
-    # risk an OOM (unconfirmed VRAM footprint — revisit if 1 GPU turns out
-    # to suffice; see llama3.1 70B-Q4-vs-F16 GPU counts in
-    # private/2025README.md for the kind of evidence that would settle it).
-    memory_gigabytes_per_cpu: 20
-    gres_gpu: "gpu:2"
-    cpus_per_task: 6
   llama3.3:70b:
     # cpus_per_task stays at the default (4), so 4 * 20 = 80GB total —
     # needs >=64GB RAM per node specs (495000MB/32 cores); gres=gpu:1
     # (the default) matches the 1-GPU requirement in private/2025README.md.
     memory_gigabytes_per_cpu: 20
+  gpt-oss:120b:
+    gres_gpu: "gpu:2"
+    memory_gigabytes_per_cpu: 20
+  llama4:scout:
+    gres_gpu: "gpu:2"
+    memory_gigabytes_per_cpu: 20
+
