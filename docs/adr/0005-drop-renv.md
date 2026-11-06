@@ -1,5 +1,9 @@
 # Drop `renv` in favor of direct install from `DESCRIPTION` via `pak`
 
+## Context
+
+This code is designed to run on an HPC, where the developer cannot directly install basic software. The HPC documentation initially suggested that the latest version of R available on the server was 4.2.2. It transpires that 4.6.1 is available (at the time of writing).
+
 ## Problem
 
 `renv` was pinning R 4.2.2 and all dependencies via `renv.lock`, activated through `.Rprofile`. It caused ongoing HPC friction:
