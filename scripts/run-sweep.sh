@@ -70,10 +70,10 @@ echo "==> Creating personal library on ${HOST} (ADR 0005: no renv, install strai
 ssh "$HOST" "mkdir -p ~/R/library"
 
 echo "==> Installing aeolusmicrotexts on ${HOST} (ADR 0004: formally installed, not load_all())"
-ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'if (!requireNamespace(\"pak\", quietly = TRUE)) install.packages(\"pak\", repos = sprintf(\"https://r-lib.github.io/p/pak/stable/%s/%s/%s\", .Platform\$pkgType, R.Version()\$os, R.Version()\$arch)); pak::pkg_install(\".\")'"
+ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2024a R/4.6.1 && Rscript -e 'if (!requireNamespace(\"pak\", quietly = TRUE)) install.packages(\"pak\", repos = sprintf(\"https://r-lib.github.io/p/pak/stable/%s/%s/%s\", .Platform\$pkgType, R.Version()\$os, R.Version()\$arch)); pak::pkg_install(\".\")'"
 
 echo "==> Validating _targets.R before submitting"
-ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2022a R/4.2.2 && Rscript -e 'targets::tar_manifest(script = \"_targets.R\")'"
+ssh "$HOST" "cd ${REMOTE_DIR} && module load foss/2024a R/4.6.1 && Rscript -e 'targets::tar_manifest(script = \"_targets.R\")'"
 
 echo "==> Submitting sweep-dispatcher.slurm (fire-and-forget; see ADR 0006)"
 ssh "$HOST" "cd ${REMOTE_DIR} && mkdir -p dispatcher-logs"

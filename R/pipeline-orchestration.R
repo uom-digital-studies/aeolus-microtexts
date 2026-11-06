@@ -94,9 +94,7 @@ ollama_worker_script_lines <- function(model, gres_gpu = "gpu:1", model_store = 
   c(
     paste0("#SBATCH --gres=", gres_gpu),
     "module purge",
-    "module load GCCcore/11.3.0",
-    "module load ollama/0.17.5-CUDA-12.8.0",
-    "module load foss/2022a R/4.2.2",
+    "module load foss/2024a ollama/0.40.8-CUDA-12.8.0 R/4.6.1",
     paste0("export OLLAMA_MODELS=", model_store),
     "export OLLAMA_NOPRUNE=1",
     "export OLLAMA_CONTEXT_LENGTH=2048",

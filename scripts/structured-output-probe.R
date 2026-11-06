@@ -4,8 +4,6 @@
 # OLLAMA_BASE_URL (random port; see that function's docs).
 #   Rscript scripts/structured-output-probe.R <model>
 
-`%||%` <- rlang::`%||%` # base %||% needs R >= 4.4; cluster has 4.2.2
-
 model <- commandArgs(trailingOnly = TRUE)[[1]]
 base_url <- Sys.getenv("OLLAMA_BASE_URL")
 if (base_url == "") stop("OLLAMA_BASE_URL not set", call. = FALSE)

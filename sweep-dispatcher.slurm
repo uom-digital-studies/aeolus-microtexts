@@ -44,8 +44,6 @@
 set -euo pipefail
 
 module purge
-module load GCCcore/11.3.0
-module load ollama/0.17.5-CUDA-12.8.0
-module load foss/2022a R/4.2.2
+module load foss/2024a ollama/0.40.8-CUDA-12.8.0 R/4.6.1
 
 Rscript -e 'targets::tar_make()'

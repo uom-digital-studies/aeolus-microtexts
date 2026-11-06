@@ -5,8 +5,6 @@
 # Server logs: ollama-logs/<model slug>_<jobid>.log
 # Probe output: probe-logs/<model slug>_<jobid>.out
 
-`%||%` <- rlang::`%||%` # base %||% needs R >= 4.4; cluster has 4.2.2
-
 models <- commandArgs(trailingOnly = TRUE)
 if (length(models) == 0) {
   models <- yaml::read_yaml("models.yml")$models |> purrr::map_chr("name")
