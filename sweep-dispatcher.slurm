@@ -34,7 +34,7 @@
 # directories for parallel runs, or allow one to complete before starting another.
 #
 #SBATCH --job-name=aeolus-sweep-dispatcher
-#SBATCH --partition=sapphire
+#SBATCH --partition=cascade
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=4G
 #SBATCH --time=43200
