@@ -1,4 +1,4 @@
-# aeolusmicrotexts (development version)
+# aeolusmicrotexts 0.3.0
 
 * In `_targets.R`, target `run_id` now always runs.
 * Added `R/globals.R` declaring `models_pulled`, `run_id` and `map` as global variables, silencing R CMD check notes.
