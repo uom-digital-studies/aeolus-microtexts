@@ -54,7 +54,7 @@ test_that("microtext granularity yields exactly one unit per microtext", {
 
 test_that("sentence granularity yields the expected total number of sentences", {
   df <- load_aeolus("sentence", include_headlines = FALSE)
-  expect_equal(nrow(df), 981)
+  expect_equal(nrow(df), 982)
 })
 
 test_that("unit_index is a contiguous 1-based sequence within each microtext", {

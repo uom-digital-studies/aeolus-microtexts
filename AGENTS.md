@@ -20,3 +20,4 @@
 - Be as concise as possible while still making sense. Sacrifice grammar for concision.
 - Outstanding work is tracked in `TODO.md`, not in `AGENTS.md`/`CONTEXT.md`
 - Summarise all key changes in `NEWS.md`, and remind the human to bump the version using `usethis::use_version()` as appropriate.
+- Run `devtools::check()` or remind the user to do so at the end of all work sessions

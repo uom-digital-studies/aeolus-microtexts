@@ -1,7 +1,0 @@
----
-title: "ai-assisted-close-reading"
----
-
-## Load temporary data
-
-In this first version of the article, we load the un-promoted data that is stored locally.

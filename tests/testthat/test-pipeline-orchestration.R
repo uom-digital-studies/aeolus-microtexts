@@ -85,9 +85,9 @@ test_that("build_slurm_controllers() embeds the GPU request, module loads, and O
   # non-comment line, and crew.cluster places script_lines right after its
   # own generated header.
   expect_equal(lines[1], "#SBATCH --gres=gpu:1")
-  expect_true(any(grepl("^module load GCCcore/", lines)))
+  expect_true(any(grepl("^module load foss/.*", lines)))
   expect_true(any(grepl("^module load ollama/", lines)))
-  expect_true(any(grepl("^module load foss/.* R/", lines)))
+  expect_true(any(grepl("^module load R/", lines)))
   expect_true(any(grepl("^OLLAMA_LOG=ollama-logs/llama3\\.1_\\$\\{SLURM_JOB_ID\\}\\.log$", lines)))
   expect_true(any(grepl("^run_ollama_server > \\$OLLAMA_LOG 2>&1 &$", lines)))
   expect_true(any(grepl("^mkdir -p ollama-logs$", lines)))

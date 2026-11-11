@@ -19,19 +19,20 @@ Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 4.1.0)
 Suggests:
+    crew,
     knitr,
     rmarkdown,
     syuzhet,
     testthat (>= 3.0.0),
     textdata,
-    withr,
-    yaml
+    withr
 VignetteBuilder: knitr
 Config/roxygen2/version: 8.1.1
 Config/testthat/edition: 3
 Collate:
     'aeolusmicrotexts-package.R'
     'data.R'
+    'globals.R'
     'model-pull.R'
     'ollama-engine.R'
     'pipeline-grid.R'
@@ -41,10 +42,10 @@ Collate:
     'rq-nationalism.R'
     'rq-sentiment.R'
     'rq-ugc.R'
+    'runs.R'
     'slurm-resources.R'
     'validate-results.R'
 Imports: 
-    crew,
     crew.cluster (>= 0.4.0),
     dplyr,
     ellmer,

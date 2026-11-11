@@ -11,7 +11,9 @@
 [x] Add `sync-results.sh` (SSH-alias-based rsync wrapper to pull `results/` down from the HPC cluster)
 [x] Update `.gitignore` to also ignore top-level `results/` (only promoted copies under `inst/extdata/results/` are tracked)
 [ ] Rewrite `README.md` to cover package usage (installation, basic example) alongside the HPC/SLURM workflow, with a high-level explanation for researchers/reviewers wanting to reproduce this analysis (see `docs/environment-variables.md` for the env-var setup split)
-[ ] Manually promote one or more curated result CSVs into `inst/extdata/results/` once a sweep has been reviewed
+[x] Manually promote one or more curated result CSVs into `inst/extdata/results/` once a sweep has been reviewed (first run done)
+[ ] Turn the promoted-run metadata file (`models.csv`) into JSON with more keys (e.g. package version, timestamp, human-authored notes); update `read_run_metadata()` and ADR 0003 to match
+[ ] Guarantee run_id uniqueness in `generate_run_id()` (two runs in the same second with the same version currently collide)
 [x] Remove the central model store from the project (`source` field in `models.yml`/`read_models()`, `resolve_ollama_models_dir()`'s `central` branch, `OLLAMA_CENTRAL_MODELS_DIR` in `.Renviron-hpc`/`docs/environment-variables.md`, matching tests/docs); it caused bugs and is no longer used
 [ ] (Human) Rewrite RQ schema field descriptions, now that they are prompt text (ADR 0008): e.g. `ugc_schema` `label` is just "content type"; write "1" rather than "+1" everywhere; check wording against the rendered `preview_prompt()` output
 [x] Size `sweep-dispatcher.slurm`'s walltime (currently a 1440-min placeholder) against the real grid once a sweep's actual wall-clock is known

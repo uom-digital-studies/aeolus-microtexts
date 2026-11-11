@@ -44,6 +44,10 @@ _Avoid_: combination, run, condition
 One invocation of the pipeline across some or all of the grid, identified by a `run_id` combining a timestamp and the installed `aeolusmicrotexts` package version (e.g. `20260821-153000_v0.1.0.9000`), so output is traceable to the exact code that produced it. Lives only in the `results/<run_id>/...` directory/filename layer (`docs/adr/0003-results-csv-schema.md`), never as its own CSV column; see `docs/adr/0004-install-package-for-targets-workers.md` for why the version is embedded.
 _Avoid_: sweep (used informally elsewhere for the same concept, but "run" is the canonical term)
 
+**Promoted run**:
+A run whose results and model digests were manually copied into `inst/extdata/results/<run_id>/` after researcher review, and so readable from the installed package.
+_Avoid_: sweep, published run
+
 **Test mode**:
 A single R parameter that switches the pipeline to a reduced sweep for local/Docker validation: 5 microtexts, using only the small `llama3.2:1b` model. Controlled entirely in R, not via `targets` branching.
 _Avoid_: dev mode, dry run

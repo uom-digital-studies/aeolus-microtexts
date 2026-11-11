@@ -1,6 +1,12 @@
 # aeolusmicrotexts (development version)
 
 * In `_targets.R`, target `run_id` now always runs.
+* Added `R/globals.R` declaring `models_pulled`, `run_id` and `map` as global variables, silencing R CMD check notes.
+* `crew` moved from Imports to Suggests: the package never calls it, only `_targets.R` does (via `crew::`).
+* `scripts/submit-structured-output-probe.R` now uses `read_models()`, `read_slurm_resources()` and `resolve_slurm_resources()` instead of ad-hoc YAML parsing.
+* New `list_runs()`, `read_run()` and `read_run_metadata()` access promoted runs in `inst/extdata/results/<run_id>/`. `list_runs()` errors on malformed run directories.
+* First promoted run added: `20261019-131523_v0.2.0.9000`.
+* ADR 0003 amended for the promoted-run layout.
 
 # aeolusmicrotexts 0.2.0
 
