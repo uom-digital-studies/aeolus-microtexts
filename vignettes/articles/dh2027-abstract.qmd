@@ -16,6 +16,17 @@ bibliography: aeolus-microtexts.bib
 
 ## Introduction
 
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(aeolusmicrotexts)
+```
+
 In this presentation, we report on our experiments performing LLM-assisted close reading of the 'Aeolus' episode of James Joyce's *Ulysses*. The 'Aeolus' episode marks a crucial "hermeneutic shift" in the novel [@lawrence_aeolus_1980, 392]. In prior episodes, the novel's language is primarily transparent and referential, as Joyce tries to create the illusion of a stream of consciousness; in 'Aelous', new voices are introduced, in the form of newspaper headlines, which interrupt the stream of consciousness and render the language opaque. Who is speaking? Is there a consciousness behind the words? Where is the divide between nature and artifice, between art and life? This "hermeneutic shift" continues in later episodes of the novel, as the language becomes increasingly opaque and self-referential.
 
 Our aims in this paper are twofold:
@@ -53,13 +64,13 @@ At the time of this abstract, one set of experimental data is available in the p
 ```{r}
 #| label: tbl-list-runs
 #| tbl-cap: Available experimental 'runs' in `aeolusmicrotexts`
-aeolusmicrotexts::list_runs() |> knitr::kable()
+list_runs() |> knitr::kable()
 ```
 
 The results are stored in a long, self-describing format, to make their inspection and replication simpler for other scholars (@tbl-result-schema).
 
 ```{r}
-results <- aeolusmicrotexts::read_run(run_id = "20261019-131523_v0.2.0.9000")
+results <- read_run(run_id = "20261019-131523_v0.2.0.9000")
 ```
 
 | column | meaning | 
@@ -81,7 +92,7 @@ As part of our research compendium, we provide a utility allowing researchers to
 
 ```{r}
 preview_prompt(
-  schema = aeolusmicrotexts::sentiment_schema,
+  schema = sentiment_schema,
   context_variant = "ulysses_context",
   unit = " DEAR DIRTY DUBLIN
 
@@ -91,7 +102,6 @@ Dubliners.
 have lived fifty and fiftythree years in Fumbally’s lane. [...]"
 )
 ```
-
 
 ## Early Results
 
@@ -196,9 +206,6 @@ results |>
   ggplot2::facet_grid(rows = ggplot2::vars(model), cols = ggplot2::vars(context_variant))
 ```
 
-```{r}
-aeolusmicrotexts::preview_prompt(aeolusmicrotexts::sentiment_schema, context_variant = "no_context")
-```
 
 ```{r}
 results |> 
@@ -207,5 +214,9 @@ results |>
   dplyr::arrange(dplyr::desc(score)) |> 
   dplyr::select(context_variant, microtext, label, score)
 ```
+
+## An Example: Microtext #43
+
+## References
 
 

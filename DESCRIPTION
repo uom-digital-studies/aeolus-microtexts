@@ -63,4 +63,6 @@ Imports:
     tidyr,
     tidytext,
     yaml
-Config/Needs/website: rmarkdown
+Config/Needs/website:
+    rmarkdown
+    quarto
