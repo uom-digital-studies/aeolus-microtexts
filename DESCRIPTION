@@ -14,12 +14,16 @@ Description: Reproducible analysis code and data for a study of the
     LLM-based sentiment analysis, and support related research
     questions on nationalism and resemblance to user-generated content.
 License: MIT + file LICENSE
+URL: https://uom-digital-studies.github.io/aeolus-microtexts/,
+    https://github.com/uom-digital-studies/aeolus-microtexts
+BugReports: https://github.com/uom-digital-studies/aeolus-microtexts/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 4.1.0)
 Suggests:
     crew,
+    ggplot2,
     knitr,
     rmarkdown,
     syuzhet,

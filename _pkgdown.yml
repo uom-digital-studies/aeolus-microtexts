@@ -1,3 +1,4 @@
 template:
   bootstrap: 5
-url: https://uom-digital-studies.github.io/aeolusmicrotexts
+url: https://uom-digital-studies.github.io/aeolus-microtexts
+destination: site

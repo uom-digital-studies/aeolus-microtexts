@@ -1,0 +1,114 @@
+# Package index
+
+## All functions
+
+- [`analyse_with_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/analyse_with_schema.md)
+  : Analyse each unit of analysis in a tibble against a
+  research-question schema
+
+- [`build_analysis_grid()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/build_analysis_grid.md)
+  : Build the full analysis grid for a sweep
+
+- [`build_grid_targets()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/build_grid_targets.md)
+  :
+
+  Build the per-model grid/scored `targets` target pairs for a sweep
+
+- [`build_output_spec()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/build_output_spec.md)
+  : Render an RQ schema's output fields as the output specification
+
+- [`build_pull_targets()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/build_pull_targets.md)
+  : Build dispatcher pull targets
+
+- [`build_slurm_controllers()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/build_slurm_controllers.md)
+  : Build one crew.cluster SLURM controller per model
+
+- [`build_system_prompt()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/build_system_prompt.md)
+  : Compose the system prompt for a schema
+
+- [`build_user_turn()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/build_user_turn.md)
+  : Compose the user turn for a unit of analysis
+
+- [`generate_run_id()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/generate_run_id.md)
+  : Generate a run identifier
+
+- [`index_microtexts()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/index_microtexts.md)
+  : Index each line of Aeolus to a microtext
+
+- [`list_runs()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/list_runs.md)
+  : List the promoted runs
+
+- [`load_aeolus()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/load_aeolus.md)
+  : Read in Aeolus and split into microtexts, optionally filtering or
+  tokenising further.
+
+- [`nationalism_schema`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/nationalism_schema.md)
+  : Coding schema for nationalist-orientation analysis (RQ2)
+
+- [`new_rq_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/new_rq_schema.md)
+  : Construct a research-question coding schema
+
+- [`preview_prompt()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/preview_prompt.md)
+  [`print(`*`<prompt_preview>`*`)`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/preview_prompt.md)
+  : Preview what is sent to the model for one unit of analysis
+
+- [`protect_initials()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/protect_initials.md)
+  : Mask whitespace after single-letter initials (e.g. "J." in "J. J.
+  O'Molloy") so a sentence tokeniser won't mistake them for
+  sentence-final full stops.
+
+- [`pull_models()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/pull_models.md)
+  : Pull all models into the model store via the dispatcher
+
+- [`read_models()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/read_models.md)
+  : Read the list of models to sweep over
+
+- [`read_run()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/read_run.md)
+  : Read the results of a promoted run
+
+- [`read_run_metadata()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/read_run_metadata.md)
+  : Read the model metadata of a promoted run
+
+- [`read_slurm_resources()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/read_slurm_resources.md)
+  : Read the SLURM resource configuration file
+
+- [`resolve_slurm_resources()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/resolve_slurm_resources.md)
+  : Resolve the SLURM resources for a given model
+
+- [`restore_initials()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/restore_initials.md)
+  :
+
+  Undo
+  [`protect_initials()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/protect_initials.md),
+  restoring plain spaces.
+
+- [`rq_schema_for()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/rq_schema_for.md)
+  : Look up the coding schema for a research question
+
+- [`run_pipeline_with_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/run_pipeline_with_schema.md)
+  : Run the full Ollama pipeline for a research-question schema: load,
+  tokenise, score, write
+
+- [`sentiment_schema`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/sentiment_schema.md)
+  : Coding schema for sentiment analysis (RQ1)
+
+- [`tokenise_by_microtext()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/tokenise_by_microtext.md)
+  : Reshape Aeolus tibble to have one row per microtext, with each
+  microtext as a string.
+
+- [`tokenise_by_sentence()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/tokenise_by_sentence.md)
+  : Reshape Aeolus tibble to have one row per sentence, with each
+  sentence as a string. If headlines are included, ensure they are
+  treated as separate sentences, since they don't end with full stops.
+
+- [`ugc_schema`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/ugc_schema.md)
+  : Coding schema for UGC-resemblance analysis (RQ3)
+
+- [`validate_results_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/validate_results_schema.md)
+  : Validate a results tibble against the ADR 0003 schema
+
+- [`validate_rq_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/validate_rq_schema.md)
+  : Check that the rq_schema contains the required data.
+
+- [`write_models_manifest()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/write_models_manifest.md)
+  : Write a model manifest to the results directory
