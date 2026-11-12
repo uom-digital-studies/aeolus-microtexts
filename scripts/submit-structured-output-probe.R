@@ -7,13 +7,13 @@
 
 models <- commandArgs(trailingOnly = TRUE)
 if (length(models) == 0) {
-  models <- yaml::read_yaml("models.yml")$models |> purrr::map_chr("name")
+  models <- aeolusmicrotexts::read_models()$model
 }
-resources <- yaml::read_yaml("slurm-resources.yml")
+resources <- aeolusmicrotexts::read_slurm_resources()
 dir.create("probe-logs", showWarnings = FALSE)
 
 submit <- function(model) {
-  res <- utils::modifyList(resources$default, resources$models[[model]] %||% list())
+  res <- aeolusmicrotexts::resolve_slurm_resources(model, resources)
   slug <- aeolusmicrotexts:::sanitise_target_name(model)
   setup <- aeolusmicrotexts:::ollama_worker_script_lines(model, gres_gpu = res$gres_gpu)
   # Debug must be set before run_ollama_server starts
@@ -26,7 +26,7 @@ submit <- function(model) {
     paste0("#SBATCH --partition=", res$partition),
     paste0("#SBATCH --cpus-per-task=", res$cpus_per_task),
     paste0("#SBATCH --mem-per-cpu=", res$memory_gigabytes_per_cpu, "G"),
-    "#SBATCH --time=00:30:00",
+    "#SBATCH --time=01:00:00",
     paste0("#SBATCH --output=probe-logs/", slug, "_%j.out"),
     setup,
     paste0("Rscript scripts/structured-output-probe.R '", model, "'")
