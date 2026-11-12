@@ -12,6 +12,8 @@ skills-lock.json
 
 .env
 
+site
+
 # R package build/check artifacts
 *.Rcheck/
 *.tar.gz
