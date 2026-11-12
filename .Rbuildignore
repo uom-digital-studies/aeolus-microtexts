@@ -35,3 +35,5 @@
 ^skills-lock.json
 ^slurm-resources.yml
 ^sweep-dispatcher.slurm
+^\.github$
+^site

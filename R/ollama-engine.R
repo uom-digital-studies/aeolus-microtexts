@@ -134,41 +134,6 @@ type_to_json_schema <- function(type) {
   }
 }
 
-#' Preview what is sent to the model for one unit of analysis
-#'
-#' Prints the system prompt and user turn (which the model reads) and the
-#' JSON Schema sent alongside them (which only constrains generation; the
-#' model never reads it). See `docs/structured-output.md`.
-#'
-#' @param schema An `rq_schema`, see [new_rq_schema()]
-#' @param context_variant See [context_variant_text()]
-#' @param unit An example unit of analysis
-#'
-#' @returns A list with `system_prompt`, `user_turn` and `json_schema`
-#'   (a JSON string), invisibly
-#' @export
-preview_prompt <- function(schema,
-                           context_variant = "no_context",
-                           unit = "IN THE HEART OF THE HIBERNIAN METROPOLIS") {
-  out <- list(
-    system_prompt = build_system_prompt(schema, context_variant),
-    user_turn = build_user_turn(unit),
-    json_schema = as.character(jsonlite::toJSON(
-      type_to_json_schema(schema$type),
-      auto_unbox = TRUE, pretty = TRUE
-    ))
-  )
-  rule <- strrep("-", 60)
-  cat(
-    rule, "SYSTEM PROMPT (read by the model)", rule, out$system_prompt, "",
-    rule, "USER TURN (read by the model)", rule, out$user_turn, "",
-    rule, "JSON SCHEMA (constrains tokens only; not read by the model)", rule,
-    out$json_schema,
-    sep = "\n"
-  )
-  invisible(out)
-}
-
 #' Analyse each unit of analysis in a tibble against a research-question schema
 #'
 #' @param aeolus_tbl A tibble with one row per unit of analysis (e.g. the
