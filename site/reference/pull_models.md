@@ -25,13 +25,13 @@ pull_models(
 - model_store:
 
   Path to the model store directory (default:
-  [`model_store_dir()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/model_store_dir.md))
+  [`model_store_dir()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/model_store_dir.md))
 
 - start_server:
 
   Function with signature `function(model_store, log)` returning
   `list(process, host)`; defaults to
-  [`start_ollama_server()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/start_ollama_server.md)
+  [`start_ollama_server()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/start_ollama_server.md)
 
 - run:
 

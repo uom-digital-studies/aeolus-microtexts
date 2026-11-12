@@ -21,7 +21,7 @@ new_rq_schema(name, type)
 
   Short RQ identifier (e.g. `"sentiment"`), recorded verbatim in the
   `research_question` output column (see
-  [`analyse_with_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/analyse_with_schema.md))
+  [`analyse_with_schema()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/analyse_with_schema.md))
 
 - type:
 

@@ -10,7 +10,7 @@
 - Use the native pipe
 - New RQ schema files (like `nationalism.R`, `sentiment-llm.R`, `ugc.R`)
   call
-  [`new_rq_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/new_rq_schema.md)
+  [`new_rq_schema()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/new_rq_schema.md)
   at the top level, so they must load after `R/ollama-engine.R`. Tag
   them `#' @include ollama-engine.R` and run
   [`devtools::document()`](https://devtools.r-lib.org/reference/document.html)

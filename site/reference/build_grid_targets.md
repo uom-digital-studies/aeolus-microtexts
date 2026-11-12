@@ -2,12 +2,12 @@
 
 One `(grid_<model>, scored_<model>)` target pair per model (ADR 0001):
 `grid_<model>` builds that model's rows via
-[`build_analysis_grid()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/build_analysis_grid.md),
+[`build_analysis_grid()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/build_analysis_grid.md),
 and `scored_<model>` branches dynamically over those rows, dispatching
 each to
-[`run_pipeline_with_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/run_pipeline_with_schema.md)
+[`run_pipeline_with_schema()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/run_pipeline_with_schema.md)
 via
-[`rq_schema_for()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/rq_schema_for.md),
+[`rq_schema_for()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/rq_schema_for.md),
 pinned to that model's controller/worker group
 (`resources = tar_resources_crew(controller = model)`). Split into one
 pair per model, rather than one grid-wide branching target, because a
@@ -38,7 +38,7 @@ build_grid_targets(
   include_headlines:
 
   Passed through to
-  [`build_analysis_grid()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/build_analysis_grid.md)
+  [`build_analysis_grid()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/build_analysis_grid.md)
 
 - results_dir:
 

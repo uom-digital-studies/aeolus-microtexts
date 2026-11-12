@@ -15,7 +15,7 @@ read_run_metadata(run_id, dir = promoted_runs_dir())
 - run_id:
 
   A run_id as listed by
-  [`list_runs()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/list_runs.md).
+  [`list_runs()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/list_runs.md).
   Matched exactly.
 
 - dir:
@@ -29,4 +29,4 @@ A tibble with character columns `model` and `digest`, one row per model.
 
 ## See also
 
-[`list_runs()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/list_runs.md)
+[`list_runs()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/list_runs.md)

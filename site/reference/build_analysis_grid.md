@@ -3,9 +3,9 @@
 One row per combination of model x research question x context variant x
 granularity x include_headlines — the unit `_targets.R` branches over
 via `pattern = map(grid)`, dispatching each row to
-[`run_pipeline_with_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/run_pipeline_with_schema.md)
+[`run_pipeline_with_schema()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/run_pipeline_with_schema.md)
 via
-[`rq_schema_for()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/rq_schema_for.md).
+[`rq_schema_for()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/rq_schema_for.md).
 
 ## Usage
 

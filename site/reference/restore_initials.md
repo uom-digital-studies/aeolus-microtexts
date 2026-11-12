@@ -1,7 +1,7 @@
 # Undo `protect_initials()`, restoring plain spaces.
 
 Undo
-[`protect_initials()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/protect_initials.md),
+[`protect_initials()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/protect_initials.md),
 restoring plain spaces.
 
 ## Usage
@@ -15,7 +15,7 @@ restore_initials(text)
 - text:
 
   Character vector previously passed through
-  [`protect_initials()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/protect_initials.md)
+  [`protect_initials()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/protect_initials.md)
 
 ## Value
 

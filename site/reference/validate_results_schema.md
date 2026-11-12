@@ -6,7 +6,7 @@ described in `docs/adr/0003-results-csv-schema.md`, and that
 0003 fixes, and that `include_headlines` is logical. Does not check
 `research_question`, `label`, or `score`, since valid values for those
 are defined per-schema (see
-[`new_rq_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/new_rq_schema.md))
+[`new_rq_schema()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/new_rq_schema.md))
 rather than fixed by ADR 0003.
 
 ## Usage

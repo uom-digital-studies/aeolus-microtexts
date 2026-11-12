@@ -34,7 +34,7 @@ ollama_worker_script_lines(
 - model_store:
 
   Path to the model store directory (default:
-  [`model_store_dir()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/model_store_dir.md))
+  [`model_store_dir()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/model_store_dir.md))
 
 ## Value
 

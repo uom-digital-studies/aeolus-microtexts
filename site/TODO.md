@@ -5,10 +5,10 @@ distinguish the schema for each research question from the logic of
 applying it to the data; use test-driven development, setting up tests
 that mock the LLM output locally \[x\] Implement
 `granularity`/`include_headline` branching in
-[`load_aeolus()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/load_aeolus.md)/`tokenise_microtexts_by_sentence()`
+[`load_aeolus()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/load_aeolus.md)/`tokenise_microtexts_by_sentence()`
 (currently always sentence-tokenises with headlines retained) \[x\]
 Update
-[`run_pipeline_with_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/run_pipeline_with_schema.md)
+[`run_pipeline_with_schema()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/run_pipeline_with_schema.md)
 to emit the results-CSV schema in `docs/adr/0003-results-csv-schema.md`
 (self-describing columns incl. `research_question`, raw `model`,
 `context_variant`, `granularity`, `include_headline`, `microtext`,
@@ -35,12 +35,12 @@ Manually promote one or more curated result CSVs into
 \[ \] Turn the promoted-run metadata file (`models.csv`) into JSON with
 more keys (e.g. package version, timestamp, human-authored notes);
 update
-[`read_run_metadata()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/read_run_metadata.md)
+[`read_run_metadata()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/read_run_metadata.md)
 and ADR 0003 to match \[ \] Guarantee run_id uniqueness in
-[`generate_run_id()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/generate_run_id.md)
+[`generate_run_id()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/generate_run_id.md)
 (two runs in the same second with the same version currently collide)
 \[x\] Remove the central model store from the project (`source` field in
-`models.yml`/[`read_models()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/read_models.md),
+`models.yml`/[`read_models()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/read_models.md),
 `resolve_ollama_models_dir()`’s `central` branch,
 `OLLAMA_CENTRAL_MODELS_DIR` in
 `.Renviron-hpc`/`docs/environment-variables.md`, matching tests/docs);
@@ -48,7 +48,7 @@ it caused bugs and is no longer used \[ \] (Human) Rewrite RQ schema
 field descriptions, now that they are prompt text (ADR 0008):
 e.g. `ugc_schema` `label` is just “content type”; write “1” rather than
 “+1” everywhere; check wording against the rendered
-[`preview_prompt()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/preview_prompt.md)
+[`preview_prompt()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/preview_prompt.md)
 output \[x\] Size `sweep-dispatcher.slurm`’s walltime (currently a
 1440-min placeholder) against the real grid once a sweep’s actual
 wall-clock is known \[ \] (Human) Pick replacement/additional
@@ -64,7 +64,7 @@ architectures (`mistral3`, `gemma3n`, anything branded
 engine and risk silently dropping `format`. Check `general.architecture`
 via `ollama show --json <model>` / `/api/show` `model_info` before
 committing to a model. \[x\] Decide whether
-[`validate_results_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/validate_results_schema.md)
+[`validate_results_schema()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/validate_results_schema.md)
 (R/schema-validation.R) should stay presence-only (current behavior) or
 also validate types/enum values
 (e.g. `granularity %in% c("microtext","sentence")`, `include_headlines`
@@ -72,7 +72,7 @@ is logical) — now validates `context_variant`/`granularity` enums (fixed
 by ADR 0003) and `include_headlines` type;
 `research_question`/`label`/`score` left unchecked since valid values
 are per-schema (see
-[`new_rq_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/new_rq_schema.md)),
+[`new_rq_schema()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/new_rq_schema.md)),
 not fixed by the ADR \[ \] Implement support for decision models once a
 newer version of Ollama is available on HPC \[x\] Finish proper
 implementation of `rq-schema-type.R`.

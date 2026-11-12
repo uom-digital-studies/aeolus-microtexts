@@ -4,7 +4,7 @@ Creates two targets for pulling all models once at pipeline start (ADR
 0007):
 
 - `models_pulled`: executes
-  [`pull_models()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/pull_models.md)
+  [`pull_models()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/pull_models.md)
   with the literal model list, so the smart cue reruns only when the
   model list changes
 

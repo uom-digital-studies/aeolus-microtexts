@@ -10,12 +10,17 @@
 
 ## Citation
 
+Source:
+[`DESCRIPTION`](https://github.com/uom-digital-studies/aeolus-microtexts/blob/HEAD/DESCRIPTION)
+
 Harrington J, Falk M (2026). *aeolusmicrotexts: Sentiment Analysis of
-the Aeolus Microtexts*. R package version 0.3.0.9000.
+the Aeolus Microtexts*. R package version 0.3.0.9000,
+<https://uom-digital-studies.github.io/aeolus-microtexts/>.
 
 @Manual{,\
   title = {aeolusmicrotexts: Sentiment Analysis of the Aeolus Microtexts},\
   author = {Jasper Harrington and Michael Falk},\
   year = {2026},\
   note = {R package version 0.3.0.9000},\
+  url = {https://uom-digital-studies.github.io/aeolus-microtexts/},\
 }

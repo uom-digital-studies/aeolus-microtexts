@@ -6,7 +6,7 @@ rest of `default` untouched. Field names deliberately match
 [`crew.cluster::crew_options_slurm()`](https://wlandau.github.io/crew.cluster/reference/crew_options_slurm.html)'s
 arguments (`partition`, `cpus_per_task`, `memory_gigabytes_per_cpu`,
 `time_minutes`) so
-[`build_slurm_controllers()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/build_slurm_controllers.md)
+[`build_slurm_controllers()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/build_slurm_controllers.md)
 can spread the result straight into it.
 
 ## Usage
@@ -24,7 +24,7 @@ resolve_slurm_resources(model, resources = read_slurm_resources())
 - resources:
 
   A list as returned by
-  [`read_slurm_resources()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/read_slurm_resources.md)
+  [`read_slurm_resources()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/read_slurm_resources.md)
 
 ## Value
 

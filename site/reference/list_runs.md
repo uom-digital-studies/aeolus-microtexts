@@ -31,7 +31,7 @@ run_id (`<YYYYMMDD-HHMMSS>_v<version>`) and it must contain both
 
 ## See also
 
-[`read_run()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/read_run.md)
+[`read_run()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/read_run.md)
 to read a run's results,
-[`read_run_metadata()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/read_run_metadata.md)
+[`read_run_metadata()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/read_run_metadata.md)
 to read its model metadata.

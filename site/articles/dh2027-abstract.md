@@ -3,7 +3,7 @@
 ## Introduction
 
 \
-[`library`](https://rdrr.io/r/base/library.html)`(``aeolusmicrotexts``)`
+[`library`](https://rdrr.io/r/base/library.html)`(`[`aeolusmicrotexts`](https://uom-digital-studies.github.io/aeolus-microtexts/)`)`
 
 In this presentation, we report on our experiments performing
 LLM-assisted close reading of the ‘Aeolus’ episode of James Joyce’s
@@ -102,7 +102,7 @@ At the time of this abstract, one set of experimental data is available
 in the package ([Table 1](#tbl-list-runs)).
 
 \
-[`list_runs`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/list_runs.md)`(``)`` ``|>`` ``knitr``::`[`kable`](https://rdrr.io/pkg/knitr/man/kable.html)`(``)`
+[`list_runs`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/list_runs.md)`(``)`` ``|>`` ``knitr``::`[`kable`](https://rdrr.io/pkg/knitr/man/kable.html)`(``)`
 
 | run_id | date | version | models |
 |:---|:---|:---|:---|
@@ -115,7 +115,7 @@ inspection and replication simpler for other scholars
 ([Table 2](#tbl-result-schema)).
 
 \
-`results`` ``<-`` `[`read_run`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/read_run.md)`(``run_id ``=`` ``"20261019-131523_v0.2.0.9000"``)`
+`results`` ``<-`` `[`read_run`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/read_run.md)`(``run_id ``=`` ``"20261019-131523_v0.2.0.9000"``)`
 
 | column | meaning |
 |----|----|
@@ -138,7 +138,7 @@ LLMs locally, we have full control over the exact prompt: it appears
 that cloud providers sometimes modify user prompts without warning.
 
 \
-[`preview_prompt`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/preview_prompt.md)`(`\
+[`preview_prompt`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/preview_prompt.md)`(`\
 `  schema ``=`` ``sentiment_schema``,`\
 `  context_variant ``=`` ``"ulysses_context"``,`\
 `  unit ``=`` ``" DEAR DIRTY DUBLIN`\
@@ -232,7 +232,7 @@ that cloud providers sometimes modify user prompts without warning.
 `  `[`return`](https://rdrr.io/r/base/function.html)`(``data``)`\
 `}`\
 \
-`classic_sentiment_analysis`` ``<-`` ``aeolusmicrotexts``::`[`load_aeolus`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/load_aeolus.md)`(``granularity ``=`` ``"microtext"``, include_headlines ``=`` ``TRUE``)`` ``|>`` `\
+`classic_sentiment_analysis`` ``<-`` ``aeolusmicrotexts``::`[`load_aeolus`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/load_aeolus.md)`(``granularity ``=`` ``"microtext"``, include_headlines ``=`` ``TRUE``)`` ``|>`` `\
 `  ``tidytext``::`[`unnest_tokens`](https://juliasilge.github.io/tidytext/reference/unnest_tokens.html)`(``output ``=`` ``word``, input ``=`` ``unit_of_analysis``)`` ``|>`` `\
 `  ``# Did not use loughran or nrc because they sort sentiments into too many categories`\
 `  ``map_sentiments``(``"afinn"``)`` ``|>`` `\

@@ -2,7 +2,7 @@
 
 The three fixed framings prepended to a schema's task instruction (see
 CONTEXT.md). These are crossed against research questions and models in
-[`build_analysis_grid()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/build_analysis_grid.md).
+[`build_analysis_grid()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/build_analysis_grid.md).
 
 ## Usage
 

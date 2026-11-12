@@ -3,7 +3,7 @@ pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   articles/dh2027-abstract: dh2027-abstract.html
-last_built: 2026-11-12T01:31Z
+last_built: 2026-11-12T01:35Z
 urls:
-  reference: https://uom-digital-studies.github.io/aeolusmicrotexts/reference
-  article: https://uom-digital-studies.github.io/aeolusmicrotexts/articles
+  reference: https://uom-digital-studies.github.io/aeolus-microtexts/reference
+  article: https://uom-digital-studies.github.io/aeolus-microtexts/articles

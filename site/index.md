@@ -13,9 +13,9 @@ nationalism in the episode?
 content? (Can an LLM be fooled into thinking the mirotexts are UGC?)
 
 See
-[TODO.md](https://uom-digital-studies.github.io/aeolusmicrotexts/TODO.md)
+[TODO.md](https://uom-digital-studies.github.io/aeolus-microtexts/TODO.md)
 for outstanding work. See
-[AGENTS.md](https://uom-digital-studies.github.io/aeolusmicrotexts/AGENTS.md)
+[AGENTS.md](https://uom-digital-studies.github.io/aeolus-microtexts/AGENTS.md)
 and
-[CONTEXT.md](https://uom-digital-studies.github.io/aeolusmicrotexts/CONTEXT.md)
+[CONTEXT.md](https://uom-digital-studies.github.io/aeolus-microtexts/CONTEXT.md)
 for project conventions and terminology.

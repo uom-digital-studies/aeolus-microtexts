@@ -17,7 +17,7 @@ read_run(run_id, dir = promoted_runs_dir())
 - run_id:
 
   A run_id as listed by
-  [`list_runs()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/list_runs.md).
+  [`list_runs()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/list_runs.md).
   Matched exactly.
 
 - dir:
@@ -31,7 +31,7 @@ A tibble of results conforming to ADR 0003.
 
 ## See also
 
-[`list_runs()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/list_runs.md)
+[`list_runs()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/list_runs.md)
 
 ## Examples
 

@@ -2,7 +2,7 @@
 
 One controller/worker group per model (ADR 0001) — each worker starts
 `ollama serve` once via
-[`ollama_worker_script_lines()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/ollama_worker_script_lines.md)
+[`ollama_worker_script_lines()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/ollama_worker_script_lines.md)
 and reuses it across that model's research-question x context-variant x
 granularity x include_headlines cells. Splice the result into
 [`crew::crew_controller_group()`](https://wlandau.github.io/crew/reference/crew_controller_group.html)
@@ -25,18 +25,18 @@ build_slurm_controllers(
 
   A character vector of Ollama model identifiers, or a tibble as
   returned by
-  [`read_models()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/read_models.md)
+  [`read_models()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/read_models.md)
   (the `model` column is extracted)
 
 - resources:
 
   A list as returned by
-  [`read_slurm_resources()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/read_slurm_resources.md);
+  [`read_slurm_resources()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/read_slurm_resources.md);
   per-model overrides are resolved via
-  [`resolve_slurm_resources()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/resolve_slurm_resources.md)
+  [`resolve_slurm_resources()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/resolve_slurm_resources.md)
   keyed off model names. A resolved `gres_gpu` field (e.g. `"gpu:2"`) is
   passed to
-  [`ollama_worker_script_lines()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/ollama_worker_script_lines.md)
+  [`ollama_worker_script_lines()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/ollama_worker_script_lines.md)
   rather than spliced into
   [`crew.cluster::crew_options_slurm()`](https://wlandau.github.io/crew.cluster/reference/crew_options_slurm.html),
   which has no matching argument; it defaults to `"gpu:1"` when absent
@@ -44,7 +44,7 @@ build_slurm_controllers(
 - host:
 
   Address the dispatcher listens on and workers dial; see
-  [`dispatcher_host()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/dispatcher_host.md)
+  [`dispatcher_host()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/dispatcher_host.md)
   for why `crew`'s own default isn't used
 
 - seconds_launch:

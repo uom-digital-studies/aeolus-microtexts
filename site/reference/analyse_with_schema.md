@@ -23,7 +23,7 @@ analyse_with_schema(
 - aeolus_tbl:
 
   A tibble with one row per unit of analysis (e.g. the output of
-  [`load_aeolus()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/load_aeolus.md))
+  [`load_aeolus()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/load_aeolus.md))
 
 - unit_of_analysis:
 
@@ -32,7 +32,7 @@ analyse_with_schema(
 - schema:
 
   An `rq_schema`, see
-  [`new_rq_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/new_rq_schema.md)
+  [`new_rq_schema()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/new_rq_schema.md)
 
 - model:
 
@@ -41,14 +41,14 @@ analyse_with_schema(
 - context_variant:
 
   See
-  [`context_variant_text()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/context_variant_text.md);
+  [`context_variant_text()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/context_variant_text.md);
   ignored if `system_prompt` is supplied directly
 
 - system_prompt:
 
   Instructions given to the model before each unit of analysis; defaults
   to
-  [`build_system_prompt()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/build_system_prompt.md)
+  [`build_system_prompt()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/build_system_prompt.md)
   applied to `schema`/`context_variant`
 
 - chat_backend:

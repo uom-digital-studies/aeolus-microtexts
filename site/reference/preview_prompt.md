@@ -23,12 +23,12 @@ print(x, width = 60, ...)
 - schema:
 
   An `rq_schema`, see
-  [`new_rq_schema()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/new_rq_schema.md)
+  [`new_rq_schema()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/new_rq_schema.md)
 
 - context_variant:
 
   See
-  [`context_variant_text()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/context_variant_text.md)
+  [`context_variant_text()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/context_variant_text.md)
 
 - unit:
 

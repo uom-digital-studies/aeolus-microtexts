@@ -2,7 +2,7 @@
 
 Approximates what ellmer sends as `response_format` for the types used
 in RQ schemas (object, enum, basic scalars), for display in
-[`preview_prompt()`](https://uom-digital-studies.github.io/aeolusmicrotexts/reference/preview_prompt.md)
+[`preview_prompt()`](https://uom-digital-studies.github.io/aeolus-microtexts/reference/preview_prompt.md)
 only. ellmer's own converter is unexported.
 
 ## Usage
