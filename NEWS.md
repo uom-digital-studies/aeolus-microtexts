@@ -1,3 +1,7 @@
+# aeolusmicrotexts (development version)
+
+* `preview_prompt` now visibly returns a structured version of the previewed prompt, rather than printing it directly. The printing logic has been moved to `print.prompt_preview`, with a `width` parameter allowing the user to wrap the output for human-readability.
+
 # aeolusmicrotexts 0.3.0
 
 * In `_targets.R`, target `run_id` now always runs.
