@@ -15,6 +15,10 @@ skills-lock.json
 # pkgdown ignores (site/ is committed and deployed manually)
 /vignettes/articles/*.html
 /vignettes/articles/*.pdf
+# Ephemeral files for website generation
+/pkgdown
+/manuscripts/*/_freeze
+/manuscripts/*/_output
 
 # R package build/check artifacts
 *.Rcheck/
@@ -51,3 +55,6 @@ skills-lock.json
 
 # Private
 private/
+
+/.quarto/
+**/*.quarto_ipynb

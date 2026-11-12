@@ -54,3 +54,4 @@
 - Run
   [`devtools::check()`](https://devtools.r-lib.org/reference/check.html)
   or remind the user to do so at the end of all work sessions
+- At every version bump, prompt the user to rebuild the pkgdown site.

@@ -37,3 +37,6 @@
 ^sweep-dispatcher.slurm
 ^\.github$
 ^site
+^manuscripts
+^pkgdown
+^_pkgdown.yml

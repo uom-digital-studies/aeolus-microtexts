@@ -2,3 +2,11 @@ template:
   bootstrap: 5
 url: https://uom-digital-studies.github.io/aeolus-microtexts
 destination: site
+
+navbar:
+  components:
+    articles:
+      text: Articles
+      menu:
+        - text: DH2027 Abstract
+          href: dh2027/index.html
