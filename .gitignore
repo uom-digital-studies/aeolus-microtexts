@@ -12,7 +12,10 @@ skills-lock.json
 
 .env
 
+# pkgdown ignores
 site
+/vignettes/articles/*.html
+/vignettes/articles/*.pdf
 
 # R package build/check artifacts
 *.Rcheck/
