@@ -16,12 +16,13 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# Upload and deploy are separate jobs: in a single job, deploy-pages can list
+# artifacts before GitHub registers the just-finished upload ("Found 0
+# artifact(s)"). If deploy fails, use "Re-run failed jobs" (not "Re-run all
+# jobs") so a second github-pages artifact isn't uploaded to the same run.
 jobs:
-  deploy:
+  upload:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v6
 
@@ -29,5 +30,12 @@ jobs:
         with:
           path: site
 
+  deploy:
+    needs: upload
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
