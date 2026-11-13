@@ -1,0 +1,36 @@
+#!/bin/sh
+# Block push if files rendered into the pkgdown site changed but site/ wasn't
+# rebuilt (scripts/build-site.R) since. Enable per clone with:
+#   git config core.hooksPath .githooks
+# Skip once with: git push --no-verify
+
+watched="manuscripts/dh2027 vignettes R man _pkgdown.yml DESCRIPTION
+README.md NEWS.md AGENTS.md CONTEXT.md TODO.md LICENSE.md"
+zero=0000000000000000000000000000000000000000
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # Branch deletion: nothing to check
+  [ "$local_sha" = "$zero" ] && continue
+
+  if [ "$remote_sha" = "$zero" ]; then
+    # New branch: check commits not on any remote
+    range="$local_sha --not --remotes"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+
+  # Most recent commit being pushed that touched a watched path
+  last=$(git rev-list -1 $range -- $watched)
+  [ -z "$last" ] && continue
+
+  # Was site/ changed in that commit or a later one?
+  if [ -z "$(git rev-list -1 "$last^..$local_sha" -- site/)" ]; then
+    echo "pre-push: site/ is stale for $local_ref."
+    echo "  Last watched change: $(git log -1 --format='%h %s' "$last")"
+    echo "  Rebuild and commit, then push again:"
+    echo "    Rscript scripts/build-site.R && git add site/ && git commit -m 'Rebuild site'"
+    echo "  Or skip with: git push --no-verify"
+    exit 1
+  fi
+done
+exit 0

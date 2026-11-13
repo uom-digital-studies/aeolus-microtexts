@@ -14,3 +14,7 @@ The DH2027 abstract needs to be published on the pkgdown site as both HTML and P
 - `pkgdown/`, `_freeze/` and `_output/` are generated and gitignored. `site/` is still committed and deployed manually.
 - The manuscript uses the *installed* `aeolusmicrotexts`, not the working tree; install before rendering.
 - `freeze: true` means chunks re-execute only when `index.qmd` changes; delete `_freeze/` to force a re-run after package changes.
+
+## Pre-push hook
+
+A pre-push hook (`.githooks/pre-push`) checks if a site rebuild is required before a push. It watches a set of files that affect the site. That watchlist may need to be updated over time as the project evolves.

@@ -40,3 +40,4 @@
 ^manuscripts
 ^pkgdown
 ^_pkgdown.yml
+^\.githooks$

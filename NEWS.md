@@ -3,6 +3,7 @@
 * abstract for DH2027 complete: you can view it on the project website under 'articles'
 * `load_aeolus` now defaults to `include_headlines = TRUE`, so it does not error when passed no arguments.
 * `preview_prompt` now visibly returns a structured version of the previewed prompt, rather than printing it directly. The printing logic has been moved to `print.prompt_preview`, with a `width` parameter allowing the user to wrap the output for human-readability.
+* New `.githooks/pre-push` hook blocks pushes when site-rendered files (manuscript, vignettes, `R/`, `man/`, top-level `.md`s, `_pkgdown.yml`, `DESCRIPTION`) changed but `site/` wasn't rebuilt afterwards. Enable per clone with `git config core.hooksPath .githooks`. `.githooks/README.md` explains it line by line for newcomers to bash/git hooks.
 * `pkgdown.yaml` workflow: upload and deploy split into separate jobs, avoiding intermittent "No artifacts named github-pages" failures when deploy ran immediately after upload.
 
 # aeolusmicrotexts 0.3.0
