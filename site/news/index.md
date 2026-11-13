@@ -10,6 +10,12 @@
   previewed prompt, rather than printing it directly. The printing logic
   has been moved to `print.prompt_preview`, with a `width` parameter
   allowing the user to wrap the output for human-readability.
+- New `.githooks/pre-push` hook blocks pushes when site-rendered files
+  (manuscript, vignettes, `R/`, `man/`, top-level `.md`s,
+  `_pkgdown.yml`, `DESCRIPTION`) changed but `site/` wasn’t rebuilt
+  afterwards. Enable per clone with
+  `git config core.hooksPath .githooks`. `.githooks/README.md` explains
+  it line by line for newcomers to bash/git hooks.
 - `pkgdown.yaml` workflow: upload and deploy split into separate jobs,
   avoiding intermittent “No artifacts named github-pages” failures when
   deploy ran immediately after upload.

@@ -43,6 +43,7 @@
 <code>load_aeolus</code> now defaults to <code>include_headlines = TRUE</code>, so it does not error when passed no arguments.</li>
 <li>
 <code>preview_prompt</code> now visibly returns a structured version of the previewed prompt, rather than printing it directly. The printing logic has been moved to <code>print.prompt_preview</code>, with a <code>width</code> parameter allowing the user to wrap the output for human-readability.</li>
+<li>New <code>.githooks/pre-push</code> hook blocks pushes when site-rendered files (manuscript, vignettes, <code>R/</code>, <code>man/</code>, top-level <code>.md</code>s, <code>_pkgdown.yml</code>, <code>DESCRIPTION</code>) changed but <code>site/</code> wasn’t rebuilt afterwards. Enable per clone with <code>git config core.hooksPath .githooks</code>. <code>.githooks/README.md</code> explains it line by line for newcomers to bash/git hooks.</li>
 <li>
 <code>pkgdown.yaml</code> workflow: upload and deploy split into separate jobs, avoiding intermittent “No artifacts named github-pages” failures when deploy ran immediately after upload.</li>
 </ul></div>
