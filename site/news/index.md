@@ -2,12 +2,17 @@
 
 ## aeolusmicrotexts (development version)
 
+- abstract for DH2027 complete: you can view it on the project website
+  under ‘articles’
 - `load_aeolus` now defaults to `include_headlines = TRUE`, so it does
   not error when passed no arguments.
 - `preview_prompt` now visibly returns a structured version of the
   previewed prompt, rather than printing it directly. The printing logic
   has been moved to `print.prompt_preview`, with a `width` parameter
   allowing the user to wrap the output for human-readability.
+- `pkgdown.yaml` workflow: upload and deploy split into separate jobs,
+  avoiding intermittent “No artifacts named github-pages” failures when
+  deploy ran immediately after upload.
 
 ## aeolusmicrotexts 0.3.0
 
