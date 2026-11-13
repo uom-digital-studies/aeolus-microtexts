@@ -1,13 +1,22 @@
 # Render the DH2027 manuscript (HTML + PDF), stage it into pkgdown/assets,
-# then build the pkgdown site into site/. Run from the repo root.
+# then build the pkgdown site into site/.
 
-manuscript_dir <- "manuscripts/dh2027"
-assets_dir <- file.path("pkgdown", "assets", "dh2027")
+# Find repo root
+root <- rprojroot::find_root(rprojroot::is_r_package)
 
-quarto::quarto_render(manuscript_dir)
+# Find manuscripts directories
+# TODO: generalise when another manuscript is added
+manuscript_dir <- file.path(root, "manuscripts", "dh2027")
+assets_dir <- file.path(root, "pkgdown", "assets", "dh2027")
 
-# Start clean so stale files don't linger in the site
-fs::dir_delete(assets_dir)  # errors if absent; use fs::dir_exists() guard
+# Render manuscripts
+quarto::quarto_render(manuscript_dir, output_format = "all")
+
+# Clear our assets_dir and copy rendered manuscript(s)
+if (fs::dir_exists(assets_dir)) {
+  fs::dir_delete(assets_dir)
+}
 fs::dir_copy(file.path(manuscript_dir, "_output"), assets_dir)
 
-pkgdown::build_site()
+# Then build site
+pkgdown::build_site(pkg = root)

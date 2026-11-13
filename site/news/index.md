@@ -2,6 +2,8 @@
 
 ## aeolusmicrotexts (development version)
 
+- `load_aeolus` now defaults to `include_headlines = TRUE`, so it does
+  not error when passed no arguments.
 - `preview_prompt` now visibly returns a structured version of the
   previewed prompt, rather than printing it directly. The printing logic
   has been moved to `print.prompt_preview`, with a `width` parameter

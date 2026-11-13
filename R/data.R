@@ -8,7 +8,7 @@
 #' @returns A tibble, with each line of Aeolus keyed to a microtext
 #' @export
 #'
-load_aeolus <- function(granularity = c("microtext", "sentence"), include_headlines = c(TRUE, FALSE)) {
+load_aeolus <- function(granularity = c("microtext", "sentence"), include_headlines = TRUE) {
   # Location of file is hard-coded
   path <- system.file("extdata", "7_Aeolus.txt", package = "aeolusmicrotexts")
 
